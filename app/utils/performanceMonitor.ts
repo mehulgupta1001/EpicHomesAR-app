@@ -1,5 +1,5 @@
-type MetricCategory = 'modelLoading' | 'arInitialization' | 'rendering';
-type MetricName = 'startup' | 'frame' | 'house_model';
+export type MetricCategory = 'modelLoading' | 'arInitialization' | 'rendering';
+export type MetricName = 'startup' | 'frame' | 'house_model';
 
 interface PerformanceMetric {
   startTime: number;

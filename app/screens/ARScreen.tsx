@@ -6,6 +6,7 @@ import { captureRef } from 'react-native-view-shot';
 import { ARView } from '../components/ARView';
 import { InfoPanel } from '../components/InfoPanel';
 import { Tutorial } from '../components/Tutorial';
+import { HouseType } from '../constants/houseTypes';
 import { offlineManager } from '../services/OfflineManager';
 import { ConstructionProgress, StorageService } from '../services/storage';
 
@@ -297,6 +298,8 @@ interface ARViewProps {
   onRotateRight: () => void;
   onMeasurementsUpdate: (measurements: Measurements) => void;
   rotation: number;
+  selectedHouse?: HouseType;
+  selectedMaterials: Record<string, string>;
 }
 
 export const ARScreen: React.FC = () => {
@@ -310,6 +313,8 @@ export const ARScreen: React.FC = () => {
   const [measurements, setMeasurements] = useState<Measurements | null>(null);
   const [progress, setProgress] = useState<ConstructionProgress[]>([]);
   const [showTutorial, setShowTutorial] = useState(true);
+  const [selectedHouse, setSelectedHouse] = useState<HouseType | undefined>(undefined);
+  const [selectedMaterials, setSelectedMaterials] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadSavedProgress();
@@ -572,6 +577,8 @@ export const ARScreen: React.FC = () => {
         onRotateRight={handleRotateRight}
         onMeasurementsUpdate={handleMeasurementsUpdate}
         rotation={rotation}
+        selectedHouse={selectedHouse}
+        selectedMaterials={selectedMaterials}
       />
 
       {showTutorial && <Tutorial onComplete={handleTutorialComplete} />}

@@ -1,56 +1,22 @@
 import React from 'react';
 import {
     Dimensions,
+    Image,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
+import { HOUSE_TYPES, HouseType } from '../constants/houseTypes';
 
-export interface HouseType {
-  id: string;
-  name: string;
-  description: string;
-  color: string;
-}
-
-const HOUSE_TYPES: HouseType[] = [
-  {
-    id: 'rumah-panggung',
-    name: 'Rumah Panggung',
-    description: 'Traditional stilt house design',
-    color: '#FFB74D',
-  },
-  {
-    id: 'rumah-panjang',
-    name: 'Rumah Panjang',
-    description: 'Traditional longhouse design',
-    color: '#4DB6AC',
-  },
-  {
-    id: 'lean-to',
-    name: 'Lean-to Structure',
-    description: 'Simple lean-to shelter design',
-    color: '#7986CB',
-  },
-  {
-    id: 'bamboo-house',
-    name: 'Elevated Bamboo House',
-    description: 'Elevated house made primarily of bamboo',
-    color: '#81C784',
-  },
-  {
-    id: 'modern-fusion',
-    name: 'Modern Fusion',
-    description: 'Contemporary design with traditional elements',
-    color: '#FF8A65',
-  },
-];
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.8;
+const CARD_MARGIN = 10;
 
 interface HouseSelectorProps {
   onSelect: (house: HouseType) => void;
-  selectedHouseId?: string;
+  selectedHouseId: string | null;
 }
 
 export const HouseSelector: React.FC<HouseSelectorProps> = ({
@@ -64,6 +30,8 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        snapToInterval={CARD_WIDTH + CARD_MARGIN * 2}
+        decelerationRate="fast"
       >
         {HOUSE_TYPES.map((house) => (
           <TouchableOpacity
@@ -74,10 +42,29 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
             ]}
             onPress={() => onSelect(house)}
           >
-            <View style={[styles.thumbnail, { backgroundColor: house.color }]} />
+            <Image 
+              source={house.thumbnail}
+              style={styles.thumbnail}
+              resizeMode="cover"
+            />
             <View style={styles.textContainer}>
               <Text style={styles.houseName}>{house.name}</Text>
               <Text style={styles.description}>{house.description}</Text>
+              <View style={styles.specs}>
+                <Text style={styles.specText}>
+                  Size: {house.dimensions.width}m × {house.dimensions.length}m
+                </Text>
+                <Text style={styles.specText}>
+                  Height: {house.dimensions.height}m
+                </Text>
+              </View>
+              <View style={styles.materials}>
+                {house.materials.map((material, index) => (
+                  <Text key={index} style={styles.materialText}>
+                    • {material}
+                  </Text>
+                ))}
+              </View>
             </View>
           </TouchableOpacity>
         ))}
@@ -86,57 +73,71 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
   );
 };
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.8;
-
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(0,0,0,0.8)',
     padding: 16,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderRadius: 12,
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: 'white',
     marginBottom: 16,
+    textAlign: 'center',
   },
   scrollContent: {
-    paddingRight: 16,
+    paddingHorizontal: CARD_MARGIN,
   },
   houseCard: {
     width: CARD_WIDTH,
-    marginRight: 16,
-    borderRadius: 10,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    marginHorizontal: CARD_MARGIN,
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   selectedCard: {
-    borderWidth: 2,
     borderColor: '#007AFF',
   },
   thumbnail: {
     width: '100%',
     height: 200,
+    backgroundColor: '#2c2c2c',
   },
   textContainer: {
-    padding: 12,
+    padding: 16,
   },
   houseName: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: '#666',
+    color: '#cccccc',
+    marginBottom: 12,
+  },
+  specs: {
+    marginBottom: 12,
+  },
+  specText: {
+    fontSize: 13,
+    color: '#cccccc',
+    marginBottom: 4,
+  },
+  materials: {
+    marginTop: 8,
+  },
+  materialText: {
+    fontSize: 13,
+    color: '#cccccc',
+    marginBottom: 2,
   },
 }); 

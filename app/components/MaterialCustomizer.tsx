@@ -1,5 +1,7 @@
-import React from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
+import React, { useState } from 'react';
 import {
+    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -7,83 +9,170 @@ import {
     View,
 } from 'react-native';
 
-export interface Material {
+interface MaterialOption {
   id: string;
   name: string;
+  thumbnail: any;
   description: string;
-  color: string;
 }
 
-const MATERIALS: Material[] = [
+interface MaterialCategory {
+  id: string;
+  name: string;
+  options: MaterialOption[];
+}
+
+const MATERIAL_CATEGORIES: MaterialCategory[] = [
   {
-    id: 'bamboo',
-    name: 'Traditional Bamboo',
-    description: 'Sustainable bamboo material',
-    color: '#8D6E63',
+    id: 'wood',
+    name: 'Wood Type',
+    options: [
+      {
+        id: 'cengal',
+        name: 'Cengal',
+        thumbnail: require('../../assets/images/materials/cengal.png'),
+        description: 'Premium hardwood, excellent durability',
+      },
+      {
+        id: 'meranti',
+        name: 'Meranti',
+        thumbnail: require('../../assets/images/materials/meranti.png'),
+        description: 'Versatile hardwood, good strength',
+      },
+      {
+        id: 'bamboo',
+        name: 'Bamboo',
+        thumbnail: require('../../assets/images/materials/bamboo.png'),
+        description: 'Sustainable, fast-growing material',
+      },
+    ],
   },
   {
-    id: 'rattan',
-    name: 'Woven Rattan',
-    description: 'Traditional rattan weaving',
-    color: '#D7CCC8',
+    id: 'roofing',
+    name: 'Roofing',
+    options: [
+      {
+        id: 'nipah',
+        name: 'Nipah Palm',
+        thumbnail: require('../../assets/images/materials/nipah.png'),
+        description: 'Traditional palm leaf roofing',
+      },
+      {
+        id: 'rumbia',
+        name: 'Rumbia',
+        thumbnail: require('../../assets/images/materials/rumbia.png'),
+        description: 'Durable palm thatch',
+      },
+      {
+        id: 'bamboo-shingle',
+        name: 'Bamboo Shingle',
+        thumbnail: require('../../assets/images/materials/bamboo-shingle.png'),
+        description: 'Modern sustainable option',
+      },
+    ],
   },
   {
-    id: 'wood-meranti',
-    name: 'Meranti Wood',
-    description: 'Local hardwood variety',
-    color: '#795548',
-  },
-  {
-    id: 'wood-chengal',
-    name: 'Chengal Wood',
-    description: 'Premium hardwood',
-    color: '#5D4037',
-  },
-  {
-    id: 'nipah',
-    name: 'Nipah Palm',
-    description: 'Traditional roofing material',
-    color: '#A1887F',
+    id: 'binding',
+    name: 'Binding',
+    options: [
+      {
+        id: 'rattan',
+        name: 'Rattan',
+        thumbnail: require('../../assets/images/materials/rattan.png'),
+        description: 'Traditional binding material',
+      },
+      {
+        id: 'natural-fiber',
+        name: 'Natural Fiber',
+        thumbnail: require('../../assets/images/materials/natural-fiber.png'),
+        description: 'Local plant-based rope',
+      },
+      {
+        id: 'modern-binding',
+        name: 'Modern Binding',
+        thumbnail: require('../../assets/images/materials/modern-binding.png'),
+        description: 'Enhanced durability option',
+      },
+    ],
   },
 ];
 
 interface MaterialCustomizerProps {
-  onSelectMaterial: (material: Material) => void;
-  selectedMaterialId?: string;
+  onClose: () => void;
+  onMaterialChange: (categoryId: string, materialId: string) => void;
+  selectedMaterials: Record<string, string>;
 }
 
 export const MaterialCustomizer: React.FC<MaterialCustomizerProps> = ({
-  onSelectMaterial,
-  selectedMaterialId,
+  onClose,
+  onMaterialChange,
+  selectedMaterials,
 }) => {
+  const [activeCategory, setActiveCategory] = useState(MATERIAL_CATEGORIES[0].id);
+
+  const currentCategory = MATERIAL_CATEGORIES.find(cat => cat.id === activeCategory);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Customize Materials</Text>
-        <Text style={styles.subtitle}>Choose traditional materials</Text>
+        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <MaterialIcons name="close" size={24} color="white" />
+        </TouchableOpacity>
       </View>
-      
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.materialsContainer}
-      >
-        {MATERIALS.map((material) => (
-          <TouchableOpacity
-            key={material.id}
-            style={[
-              styles.materialCard,
-              selectedMaterialId === material.id && styles.selectedCard,
-            ]}
-            onPress={() => onSelectMaterial(material)}
-          >
-            <View style={[styles.materialImage, { backgroundColor: material.color }]} />
-            <View style={styles.materialInfo}>
-              <Text style={styles.materialName}>{material.name}</Text>
-              <Text style={styles.materialDescription}>
-                {material.description}
+
+      <View style={styles.categoryTabs}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {MATERIAL_CATEGORIES.map((category) => (
+            <TouchableOpacity
+              key={category.id}
+              style={[
+                styles.categoryTab,
+                activeCategory === category.id && styles.activeTab,
+              ]}
+              onPress={() => setActiveCategory(category.id)}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  activeCategory === category.id && styles.activeText,
+                ]}
+              >
+                {category.name}
               </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ScrollView style={styles.optionsContainer}>
+        {currentCategory?.options.map((option) => (
+          <TouchableOpacity
+            key={option.id}
+            style={[
+              styles.optionCard,
+              selectedMaterials[currentCategory.id] === option.id &&
+                styles.selectedOption,
+            ]}
+            onPress={() => onMaterialChange(currentCategory.id, option.id)}
+          >
+            <Image
+              source={option.thumbnail}
+              style={styles.materialThumbnail}
+              resizeMode="cover"
+            />
+            <View style={styles.optionInfo}>
+              <Text style={styles.optionName}>{option.name}</Text>
+              <Text style={styles.optionDescription}>{option.description}</Text>
             </View>
+            {selectedMaterials[currentCategory.id] === option.id && (
+              <MaterialIcons
+                name="check-circle"
+                size={24}
+                color="#007AFF"
+                style={styles.checkIcon}
+              />
+            )}
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -93,59 +182,87 @@ export const MaterialCustomizer: React.FC<MaterialCustomizerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    maxHeight: '60%',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 4,
+    color: 'white',
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  materialsContainer: {
-    paddingBottom: 8,
-  },
-  materialCard: {
-    width: 140,
-    marginRight: 12,
-    borderRadius: 10,
-    backgroundColor: '#f5f5f5',
-    overflow: 'hidden',
-  },
-  selectedCard: {
-    borderWidth: 2,
-    borderColor: '#007AFF',
-  },
-  materialImage: {
-    width: '100%',
-    height: 100,
-  },
-  materialInfo: {
+  closeButton: {
     padding: 8,
   },
-  materialName: {
+  categoryTabs: {
+    marginBottom: 16,
+  },
+  categoryTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  activeTab: {
+    backgroundColor: '#007AFF',
+  },
+  categoryText: {
+    color: '#cccccc',
     fontSize: 14,
     fontWeight: '600',
+  },
+  activeText: {
+    color: 'white',
+  },
+  optionsContainer: {
+    flex: 1,
+  },
+  optionCard: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  selectedOption: {
+    backgroundColor: 'rgba(0,122,255,0.1)',
+    borderColor: '#007AFF',
+    borderWidth: 1,
+  },
+  materialThumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: '#2c2c2c',
+  },
+  optionInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  optionName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
     marginBottom: 4,
   },
-  materialDescription: {
-    fontSize: 12,
-    color: '#666',
+  optionDescription: {
+    fontSize: 14,
+    color: '#cccccc',
+  },
+  checkIcon: {
+    marginLeft: 12,
   },
 }); 

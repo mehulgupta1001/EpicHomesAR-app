@@ -130,9 +130,9 @@ graph LR
 
 1. **Install Project Dependencies**
    - In the same Command Prompt window, type:
-     ```bash
-     npm install
-     ```
+   ```bash
+   npm install
+   ```
    - This will take a few minutes. You'll see a lot of text scrolling by - this is normal!
    - If you see any yellow warnings, don't worry - these are okay
 
@@ -146,9 +146,9 @@ graph LR
 
 1. **Start the Development Server**
    - In Command Prompt, type:
-     ```bash
-     npx expo start
-     ```
+   ```bash
+   npx expo start
+   ```
    - You'll see a QR code appear in the Command Prompt
 
 2. **Connect Your Phone**
@@ -188,7 +188,7 @@ graph LR
 4. **App Crashes on Start**
    - Close Expo Go
    - In Command Prompt:
-     ```bash
+```bash
      npm install
      npx expo start --clear
      ```
