@@ -320,7 +320,3 @@ For technical support:
 - Create an issue in the repository
 - Contact the development team
 - Check documentation in `/docs`
-
-## License
-
-[Your License] - See LICENSE file for details
