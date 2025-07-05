@@ -43,7 +43,7 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
             onPress={() => onSelect(house)}
           >
             <Image 
-              source={house.thumbnail}
+              source={house.thumbnail ? house.thumbnail : require('../../assets/images/icon.png')}
               style={styles.thumbnail}
               resizeMode="cover"
             />

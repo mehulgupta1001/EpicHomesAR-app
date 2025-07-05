@@ -1,15 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
+const houseModel = Asset.fromModule(require('../../assets/models/houses/house.glb')).uri;
+const traditionalMalayModel = Asset.fromModule(require('../../assets/models/houses/traditional malay house.glb')).uri;
 
 interface CachedAsset {
   uri: string;
   timestamp: number;
   size: number;
-}
-
-interface FileInfo extends FileSystem.FileInfo {
-  size?: number;
 }
 
 class OfflineManager {
@@ -48,7 +46,8 @@ class OfflineManager {
 
   private async ensureRequiredAssets(): Promise<void> {
     const requiredAssets = [
-      require('../../assets/models/houses/house.glb'),
+      houseModel,
+      traditionalMalayModel,
       // Add other required assets here
     ];
 
@@ -63,12 +62,15 @@ class OfflineManager {
       if (!cached || cached.timestamp < (Date.now() - 7 * 24 * 60 * 60 * 1000)) { // 1 week old
         try {
           await FileSystem.downloadAsync(assetUri, targetPath);
-          const info = await FileSystem.getInfoAsync(targetPath) as FileInfo;
-          
+          const info = await FileSystem.getInfoAsync(targetPath) as FileSystem.FileInfo;
+          let size = 0;
+          if (info.exists) {
+            size = info.size;
+          }
           this.cachedAssets.set(assetName, {
             uri: targetPath,
             timestamp: Date.now(),
-            size: info.size || 0
+            size
           });
           
           await this.saveCacheInfo();

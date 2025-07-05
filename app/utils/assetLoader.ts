@@ -1,5 +1,7 @@
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
+const houseModel = Asset.fromModule(require('../../assets/models/houses/house.glb')).uri;
+const traditionalMalayModel = Asset.fromModule(require('../../assets/models/houses/traditional malay house.glb')).uri;
 
 interface AssetManifest {
   models: string[];
@@ -8,7 +10,8 @@ interface AssetManifest {
 
 const ASSET_MANIFEST: AssetManifest = {
   models: [
-    require('../../assets/models/houses/house.glb'),
+    houseModel,
+    traditionalMalayModel,
   ],
   textures: [
     // Add texture paths here when needed

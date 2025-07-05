@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -74,12 +74,7 @@ export const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [animation] = useState(new Animated.Value(0));
 
-  useEffect(() => {
-    checkTutorialStatus();
-    animateIn();
-  }, []);
-
-  const checkTutorialStatus = async () => {
+  const checkTutorialStatus = useCallback(async () => {
     try {
       const completed = await AsyncStorage.getItem(TUTORIAL_KEY);
       if (completed === 'true') {
@@ -89,14 +84,19 @@ export const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
     } catch (error) {
       console.error('Error checking tutorial status:', error);
     }
-  };
+  }, [onComplete]);
 
-  const animateIn = () => {
+  const animateIn = useCallback(() => {
     Animated.spring(animation, {
       toValue: 1,
       useNativeDriver: true,
     }).start();
-  };
+  }, [animation]);
+
+  useEffect(() => {
+    checkTutorialStatus();
+    animateIn();
+  }, [checkTutorialStatus, animateIn]);
 
   const handleNext = async () => {
     if (currentStep < TUTORIAL_STEPS.length - 1) {
