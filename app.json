@@ -8,6 +8,8 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "jsEngine": "hermes",
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.epichomesar",

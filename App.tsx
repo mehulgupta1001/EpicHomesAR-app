@@ -5,8 +5,8 @@ import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Screens
-import ARScreen from './app/screens/ARScreen';
-import HomeScreen from './app/screens/HomeScreen';
+import { ARScreen } from './app/screens/ARScreen';
+import { HomeScreen } from './app/screens/HomeScreen';
 
 const Stack = createNativeStackNavigator();
 
