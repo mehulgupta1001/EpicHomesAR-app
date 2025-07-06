@@ -22,6 +22,9 @@ import type { MetricCategory, MetricName } from '../utils/performanceMonitor';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { LoadingOverlay } from './LoadingOverlay';
 
+// Define house model URI outside component for better performance
+const houseModel = Asset.fromModule(houseModelFile).uri;
+
 // Define materials for different house types and parts
 ViroMaterials.createMaterials({
   // Wood materials
@@ -225,8 +228,6 @@ export const ARView: React.FC<ARViewProps> = ({
       </>
     );
   };
-
-  const houseModel = Asset.fromModule(houseModelFile).uri;
 
   return (
     <View style={styles.container}>
