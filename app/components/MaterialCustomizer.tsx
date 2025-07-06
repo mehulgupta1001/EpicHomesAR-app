@@ -30,19 +30,19 @@ const MATERIAL_CATEGORIES: MaterialCategory[] = [
       {
         id: 'cengal',
         name: 'Cengal',
-        thumbnail: require('../../assets/images/materials/cengal.png'),
+        thumbnail: null,
         description: 'Premium hardwood, excellent durability',
       },
       {
         id: 'meranti',
         name: 'Meranti',
-        thumbnail: require('../../assets/images/materials/meranti.png'),
+        thumbnail: null,
         description: 'Versatile hardwood, good strength',
       },
       {
         id: 'bamboo',
         name: 'Bamboo',
-        thumbnail: require('../../assets/images/materials/bamboo.png'),
+        thumbnail: null,
         description: 'Sustainable, fast-growing material',
       },
     ],
@@ -54,19 +54,19 @@ const MATERIAL_CATEGORIES: MaterialCategory[] = [
       {
         id: 'nipah',
         name: 'Nipah Palm',
-        thumbnail: require('../../assets/images/materials/nipah.png'),
+        thumbnail: null,
         description: 'Traditional palm leaf roofing',
       },
       {
         id: 'rumbia',
         name: 'Rumbia',
-        thumbnail: require('../../assets/images/materials/rumbia.png'),
+        thumbnail: null,
         description: 'Durable palm thatch',
       },
       {
         id: 'bamboo-shingle',
         name: 'Bamboo Shingle',
-        thumbnail: require('../../assets/images/materials/bamboo-shingle.png'),
+        thumbnail: null,
         description: 'Modern sustainable option',
       },
     ],
@@ -78,19 +78,19 @@ const MATERIAL_CATEGORIES: MaterialCategory[] = [
       {
         id: 'rattan',
         name: 'Rattan',
-        thumbnail: require('../../assets/images/materials/rattan.png'),
+        thumbnail: null,
         description: 'Traditional binding material',
       },
       {
         id: 'natural-fiber',
         name: 'Natural Fiber',
-        thumbnail: require('../../assets/images/materials/natural-fiber.png'),
+        thumbnail: null,
         description: 'Local plant-based rope',
       },
       {
         id: 'modern-binding',
         name: 'Modern Binding',
-        thumbnail: require('../../assets/images/materials/modern-binding.png'),
+        thumbnail: null,
         description: 'Enhanced durability option',
       },
     ],
@@ -156,11 +156,17 @@ export const MaterialCustomizer: React.FC<MaterialCustomizerProps> = ({
             ]}
             onPress={() => onMaterialChange(currentCategory.id, option.id)}
           >
-            <Image
-              source={option.thumbnail}
-              style={styles.materialThumbnail}
-              resizeMode="cover"
-            />
+            {option.thumbnail ? (
+              <Image
+                source={option.thumbnail}
+                style={styles.materialThumbnail}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.materialThumbnail}>
+                <Text style={styles.placeholderText}>{option.name.charAt(0)}</Text>
+              </View>
+            )}
             <View style={styles.optionInfo}>
               <Text style={styles.optionName}>{option.name}</Text>
               <Text style={styles.optionDescription}>{option.description}</Text>
@@ -247,6 +253,13 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 8,
     backgroundColor: '#2c2c2c',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   optionInfo: {
     flex: 1,
