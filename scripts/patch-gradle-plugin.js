@@ -1,3 +1,12 @@
+// Patch for __dirname compatibility in both CommonJS and ES modules
+let __dirname = typeof __dirname !== 'undefined' ? __dirname : undefined;
+if (!__dirname) {
+  const { fileURLToPath } = require('url');
+  const { dirname } = require('path');
+  const __filename = fileURLToPath(import.meta.url);
+  __dirname = dirname(__filename);
+}
+
 const fs = require('fs');
 const path = require('path');
 

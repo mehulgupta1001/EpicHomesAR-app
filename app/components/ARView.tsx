@@ -16,11 +16,11 @@ import { Asset } from 'expo-asset';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import houseTexture from '../../assets/models/houses/gltf_embedded_0.jpeg';
+import houseModelFile from '../../assets/models/houses/house.glb';
 import { HouseType } from '../constants/houseTypes';
 import type { MetricCategory, MetricName } from '../utils/performanceMonitor';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { LoadingOverlay } from './LoadingOverlay';
-const houseModel = Asset.fromModule(require('../../assets/models/houses/house.glb')).uri;
 
 // Define materials for different house types and parts
 ViroMaterials.createMaterials({
@@ -225,6 +225,8 @@ export const ARView: React.FC<ARViewProps> = ({
       </>
     );
   };
+
+  const houseModel = Asset.fromModule(houseModelFile).uri;
 
   return (
     <View style={styles.container}>
