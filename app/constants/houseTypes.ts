@@ -1,15 +1,13 @@
-import { Asset } from 'expo-asset';
-import houseModelFile from '../../assets/models/houses/house.glb';
-import traditionalMalayModelFile from '../../assets/models/houses/traditional malay house.glb';
-const houseModel = Asset.fromModule(houseModelFile).uri;
-const traditionalMalayModel = Asset.fromModule(traditionalMalayModelFile).uri;
+import { ImageSourcePropType } from 'react-native';
+import { ASSETS } from './assets';
+import { DIMENSIONS } from './values';
 
 export interface HouseType {
   id: string;
   name: string;
   description: string;
-  model: any;
-  thumbnail: any;
+  model: ImageSourcePropType;
+  thumbnail: ImageSourcePropType;
   dimensions: {
     width: number;
     length: number;
@@ -25,14 +23,9 @@ export const HOUSE_TYPES: HouseType[] = [
     id: 'default-house',
     name: 'Default House',
     description: 'A basic traditional house model.',
-    model: houseModel,
-    thumbnail: null, // No thumbnail available
-    dimensions: {
-      width: 6.1,
-      length: 7.62,
-      height: 4.57,
-      platformHeight: 1.22
-    },
+    model: ASSETS.models.house,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.DEFAULT_HOUSE,
     materials: [
       'Cengal hardwood',
       'Bamboo panels',
@@ -45,14 +38,9 @@ export const HOUSE_TYPES: HouseType[] = [
     id: 'traditional-malay-house',
     name: 'Traditional Malay House',
     description: 'A detailed model of a traditional Malay house.',
-    model: traditionalMalayModel,
-    thumbnail: null, // No thumbnail available
-    dimensions: {
-      width: 8.0,
-      length: 10.0,
-      height: 5.0,
-      platformHeight: 1.5
-    },
+    model: ASSETS.models.traditionalMalay,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.TRADITIONAL_MALAY,
     materials: [
       'Timber',
       'Bamboo',

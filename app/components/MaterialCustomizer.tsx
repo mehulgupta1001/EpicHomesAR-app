@@ -2,17 +2,20 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
     Image,
+    ImageSourcePropType,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
+import { ASSETS } from '../constants/assets';
+import { COLORS } from '../constants/values';
 
 interface MaterialOption {
   id: string;
   name: string;
-  thumbnail: any;
+  thumbnail: ImageSourcePropType;
   description: string;
 }
 
@@ -30,19 +33,19 @@ const MATERIAL_CATEGORIES: MaterialCategory[] = [
       {
         id: 'cengal',
         name: 'Cengal',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Premium hardwood, excellent durability',
       },
       {
         id: 'meranti',
         name: 'Meranti',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Versatile hardwood, good strength',
       },
       {
         id: 'bamboo',
         name: 'Bamboo',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Sustainable, fast-growing material',
       },
     ],
@@ -54,19 +57,19 @@ const MATERIAL_CATEGORIES: MaterialCategory[] = [
       {
         id: 'nipah',
         name: 'Nipah Palm',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Traditional palm leaf roofing',
       },
       {
         id: 'rumbia',
         name: 'Rumbia',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Durable palm thatch',
       },
       {
         id: 'bamboo-shingle',
         name: 'Bamboo Shingle',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Modern sustainable option',
       },
     ],
@@ -78,19 +81,19 @@ const MATERIAL_CATEGORIES: MaterialCategory[] = [
       {
         id: 'rattan',
         name: 'Rattan',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Traditional binding material',
       },
       {
         id: 'natural-fiber',
         name: 'Natural Fiber',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Local plant-based rope',
       },
       {
         id: 'modern-binding',
         name: 'Modern Binding',
-        thumbnail: null,
+        thumbnail: ASSETS.thumbnails.default,
         description: 'Enhanced durability option',
       },
     ],
@@ -155,6 +158,9 @@ export const MaterialCustomizer: React.FC<MaterialCustomizerProps> = ({
                 styles.selectedOption,
             ]}
             onPress={() => onMaterialChange(currentCategory.id, option.id)}
+            accessible={true}
+            accessibilityLabel={`Select material: ${option.name}`}
+            accessibilityRole="button"
           >
             {option.thumbnail ? (
               <Image
@@ -252,12 +258,12 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 8,
-    backgroundColor: '#2c2c2c',
+    backgroundColor: COLORS.BACKGROUND,
     justifyContent: 'center',
     alignItems: 'center',
   },
   placeholderText: {
-    color: 'white',
+    color: COLORS.WHITE,
     fontSize: 24,
     fontWeight: 'bold',
   },
@@ -268,12 +274,12 @@ const styles = StyleSheet.create({
   optionName: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'white',
+    color: COLORS.WHITE,
     marginBottom: 4,
   },
   optionDescription: {
     fontSize: 14,
-    color: '#cccccc',
+    color: COLORS.SECONDARY,
   },
   checkIcon: {
     marginLeft: 12,

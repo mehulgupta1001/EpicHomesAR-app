@@ -9,6 +9,7 @@ import {
     View,
 } from 'react-native';
 import { HOUSE_TYPES, HouseType } from '../constants/houseTypes';
+import { COLORS } from '../constants/values';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.8;
@@ -41,6 +42,9 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
               selectedHouseId === house.id && styles.selectedCard,
             ]}
             onPress={() => onSelect(house)}
+            accessible={true}
+            accessibilityLabel={`Select ${house.name}`}
+            accessibilityRole="button"
           >
             <Image 
               source={house.thumbnail ? house.thumbnail : require('../../assets/images/icon.png')}
@@ -75,7 +79,7 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: COLORS.BACKGROUND,
     padding: 16,
     borderRadius: 12,
     position: 'absolute',
@@ -86,7 +90,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'white',
+    color: COLORS.WHITE,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -95,7 +99,7 @@ const styles = StyleSheet.create({
   },
   houseCard: {
     width: CARD_WIDTH,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: COLORS.CARD_BG,
     borderRadius: 12,
     marginHorizontal: CARD_MARGIN,
     overflow: 'hidden',
@@ -103,12 +107,12 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   selectedCard: {
-    borderColor: '#007AFF',
+    borderColor: COLORS.CARD_BORDER,
   },
   thumbnail: {
     width: '100%',
     height: 200,
-    backgroundColor: '#2c2c2c',
+    backgroundColor: COLORS.BACKGROUND,
   },
   textContainer: {
     padding: 16,
@@ -116,12 +120,12 @@ const styles = StyleSheet.create({
   houseName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
+    color: COLORS.WHITE,
     marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: '#cccccc',
+    color: COLORS.SECONDARY,
     marginBottom: 12,
   },
   specs: {
@@ -129,7 +133,7 @@ const styles = StyleSheet.create({
   },
   specText: {
     fontSize: 13,
-    color: '#cccccc',
+    color: COLORS.SECONDARY,
     marginBottom: 4,
   },
   materials: {
@@ -137,7 +141,7 @@ const styles = StyleSheet.create({
   },
   materialText: {
     fontSize: 13,
-    color: '#cccccc',
+    color: COLORS.SECONDARY,
     marginBottom: 2,
   },
 }); 

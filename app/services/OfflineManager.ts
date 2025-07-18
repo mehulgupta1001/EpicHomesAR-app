@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
+import { Alert } from 'react-native';
 import houseModelFile from '../../assets/models/houses/house.glb';
-import traditionalMalayModelFile from '../../assets/models/houses/traditional malay house.glb';
+import traditionalMalayModelFile from '../../assets/models/houses/traditional-malay-house.glb';
 const houseModel = Asset.fromModule(houseModelFile).uri;
 const traditionalMalayModel = Asset.fromModule(traditionalMalayModelFile).uri;
 
@@ -40,8 +41,9 @@ class OfflineManager {
 
       // Ensure required assets are cached
       await this.ensureRequiredAssets();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error initializing offline manager:', error);
+      Alert.alert('Offline Asset Error', `Failed to initialize offline assets: ${error?.message || 'Unknown error'}`);
       throw error;
     }
   }
@@ -58,8 +60,6 @@ class OfflineManager {
       const assetUri = assetModule.uri;
       const assetName = assetUri.split('/').pop() || 'unknown';
       const targetPath = `${this.assetDirectory}${assetName}`;
-
-      // Check if asset needs updating
       const cached = this.cachedAssets.get(assetName);
       if (!cached || cached.timestamp < (Date.now() - 7 * 24 * 60 * 60 * 1000)) { // 1 week old
         try {
@@ -76,9 +76,9 @@ class OfflineManager {
           });
           
           await this.saveCacheInfo();
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error caching asset ${assetName}:`, error);
-          // If download fails but we have a cached version, we'll use that
+          Alert.alert('Asset Download Error', `Failed to download asset ${assetName}: ${error?.message || 'Unknown error'}`);
           if (!cached) throw error;
         }
       }

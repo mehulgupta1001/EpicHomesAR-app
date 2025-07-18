@@ -18,6 +18,7 @@ import { Alert, StyleSheet, View } from 'react-native';
 import houseTexture from '../../assets/models/houses/gltf_embedded_0.jpeg';
 import houseModelFile from '../../assets/models/houses/house.glb';
 import { HouseType } from '../constants/houseTypes';
+import { COLORS } from '../constants/values';
 import type { MetricCategory, MetricName } from '../utils/performanceMonitor';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { LoadingOverlay } from './LoadingOverlay';
@@ -158,7 +159,7 @@ export const ARView: React.FC<ARViewProps> = ({
     console.error('Error in AR view:', event.nativeEvent);
     Alert.alert(
       'AR Error',
-      'There was an error in the AR experience. Please ensure you have sufficient lighting and a clear surface.',
+      `There was an error in the AR experience: ${event.nativeEvent?.message || 'Unknown error'}. Please ensure you have sufficient lighting and a clear surface.`,
       [{ text: 'OK' }]
     );
   };
@@ -293,7 +294,9 @@ export const ARView: React.FC<ARViewProps> = ({
                   scale={[0.5, 0.5, 0.5]}
                   position={[0, 0, -1]}
                   fontSize={16}
-                  color="white"
+                  color={COLORS.WHITE}
+                  accessible={true}
+                  accessibilityLabel="Tap on the surface to place the house"
                 />
               )}
             </ViroARScene>
@@ -302,7 +305,7 @@ export const ARView: React.FC<ARViewProps> = ({
         style={styles.arView}
       />
 
-      {isLoading && <LoadingOverlay message="Loading 3D Model..." />}
+      {isLoading && <LoadingOverlay message="Loading 3D Model..." accessible={true} accessibilityLabel="Loading 3D Model" />}
     </View>
   );
 };

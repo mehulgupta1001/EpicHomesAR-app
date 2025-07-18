@@ -31,7 +31,7 @@ The app requires these permissions:
 
 ## Contact
 For questions about this privacy policy, contact:
-[Your Contact Information]
+mehulgup1001@gmail.com
 
 ## Changes
 We may update this policy. Check this page for updates. 

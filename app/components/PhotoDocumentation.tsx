@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { COLORS } from '../constants/values';
 
 interface PhotoDocumentationProps {
   stepIndex: number;
@@ -47,8 +48,8 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
 
         onPhotoAdded(stepIndex, newUri);
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to take photo. Please try again.');
+    } catch (error: any) {
+      Alert.alert('Error', `Failed to take photo: ${error?.message || 'Unknown error'}`);
       console.error('Photo error:', error);
     } finally {
       setLoading(false);
@@ -62,6 +63,9 @@ export const PhotoDocumentation: React.FC<PhotoDocumentationProps> = ({
         style={styles.button}
         onPress={takePhoto}
         disabled={loading}
+        accessible={true}
+        accessibilityLabel="Take photo for documentation"
+        accessibilityRole="button"
       >
         <Text style={styles.buttonText}>
           {loading ? 'Taking Photo...' : 'Take Photo'}
@@ -88,18 +92,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: COLORS.WHITE,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#4a90e2',
+    backgroundColor: COLORS.PRIMARY,
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
     marginBottom: 10,
   },
   buttonText: {
-    color: '#ffffff',
+    color: COLORS.WHITE,
     fontSize: 16,
   },
   photoGrid: {

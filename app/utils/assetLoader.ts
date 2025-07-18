@@ -1,7 +1,7 @@
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 import houseModelFile from '../../assets/models/houses/house.glb';
-import traditionalMalayModelFile from '../../assets/models/houses/traditional malay house.glb';
+import traditionalMalayModelFile from '../../assets/models/houses/traditional-malay-house.glb';
 const houseModel = Asset.fromModule(houseModelFile).uri;
 const traditionalMalayModel = Asset.fromModule(traditionalMalayModelFile).uri;
 

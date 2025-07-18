@@ -5,6 +5,7 @@ import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Screens
+import { ErrorBoundary } from './app/components/ErrorBoundary';
 import { ARScreen } from './app/screens/ARScreen';
 import { HomeScreen } from './app/screens/HomeScreen';
 
@@ -12,22 +13,24 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Home">
-          <Stack.Screen 
-            name="Home" 
-            component={HomeScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="AR" 
-            component={ARScreen}
-            options={{ headerShown: false }}
-          />
-        </Stack.Navigator>
-        <StatusBar style="auto" />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Home">
+            <Stack.Screen 
+              name="Home" 
+              component={HomeScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="AR" 
+              component={ARScreen}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+          <StatusBar style="auto" />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 } 

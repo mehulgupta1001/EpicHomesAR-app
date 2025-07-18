@@ -105,6 +105,25 @@ Each phase includes:
 - Safety guidelines
 - Progress tracking
 
+## 🛑 Known Issues
+- Some Android devices may not support ARCore. See troubleshooting below.
+- AR tracking may fail in low light or on reflective surfaces.
+- If assets/models are not loading, ensure you have sufficient storage and permissions.
+
+## 🛠️ ARCore/ARKit Troubleshooting
+- **Android:** Ensure your device supports ARCore. Install/update Google Play Services for AR from the Play Store.
+- **iOS:** ARKit requires iOS 11+ and a compatible device (iPhone 6s or newer).
+- **General:** Restart the app and ensure all permissions are granted. Try clearing the app cache if issues persist.
+
+## 📦 Updating Models/Assets
+- Place new `.glb` models in `assets/models/houses/` and reference them in `app/constants/assets.ts`.
+- Add new images/textures to `assets/images/` and update references in `app/constants/assets.ts`.
+- Update `app/constants/houseTypes.ts` to register new house types or models.
+
+## 🔒 Privacy & Permissions
+- The app only requests permissions required for AR, photo documentation, and offline storage.
+- No personal data is collected or shared. See `PRIVACY_POLICY.md` for details.
+
 ## 🛠️ Technical Stack
 
 - **Frontend**: React Native 0.71.14
@@ -171,7 +190,8 @@ This project is specifically developed for Epic Homes' traditional house constru
 
 ## 📞 Support
 
-For technical support or feature requests, please create an issue in the repository or contact the development team.
+For technical support or feature requests, please create an issue in the repository or contact:
+mehulgup1001@gmail.com
 
 ---
 
