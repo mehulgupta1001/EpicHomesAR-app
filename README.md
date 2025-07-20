@@ -8,6 +8,23 @@ Epic Homes AR is a comprehensive AR-powered construction visualization tool desi
 
 ## ✨ Key Features
 
+- [x] Augmented Reality visualization of traditional houses
+- [x] Two detailed 3D house models (Orang Asli, Traditional Malay)
+- [x] Material customization (wood, roofing, binding)
+- [x] Gesture controls (zoom, rotate)
+- [x] Step-by-step construction guides
+- [x] Material and tool lists for each phase
+- [x] Time estimates for each phase
+- [x] Safety guidelines for each phase
+- [x] Progress tracking (mark steps complete, add notes)
+- [x] Photo documentation (take and save photos)
+- [x] Offline compatibility (all features work offline)
+- [x] Performance monitoring (for AR/3D)
+- [x] Multilingual UI groundwork (Bahasa Melayu planned)
+- [x] Export/share progress (export as JSON/text)
+- [x] Onboarding/tutorial system
+- [x] Works on Android (2019+), designed for field use
+
 ### 🥽 Augmented Reality Visualization
 - **Real-time AR Placement**: Place 3D house models in your actual environment
 - **Multiple House Types**: Choose from traditional Orang Asli and Malay house designs
@@ -39,6 +56,35 @@ Epic Homes AR is a comprehensive AR-powered construction visualization tool desi
 - **Traditional Designs**: Authentic Orang Asli and Malay house models
 - **Cultural Information**: Educational content about traditional architecture
 - **Heritage Preservation**: Digital documentation of traditional building methods
+
+## 🌐 Language Support
+
+Currently, the app UI and documentation are in **English**. We recognize the importance of Bahasa Melayu for indigenous communities and field teams in Malaysia. **Bahasa Melayu support is planned** for a future release. If you would like to contribute translations or help implement i18n, see the guide below.
+
+### How to Add a New Language
+1. Add a translation file (e.g., `locales/ms.json`) with all UI strings in the new language.
+2. Integrate an i18n library (e.g., `i18n-js`, `react-intl`) in `App.tsx`.
+3. Add a language toggle in the app or auto-detect device locale.
+4. Test all screens for layout and translation accuracy.
+
+## 🇲🇾 How to Add or Expand Malay (Bahasa Melayu) Translations
+
+1. **Open the translation files:**
+   - English: `locales/en.json`
+   - Malay: `locales/ms.json`
+2. **Find the string you want to translate.**
+   - If it exists in English but not in Malay, add the Malay translation in the same key in `ms.json`.
+   - If it’s a new string, add it to both files with the English and Malay values.
+3. **Use only clear, unambiguous Malay.**
+   - If unsure, leave the English value in `ms.json` and mark it for review.
+4. **Test your changes:**
+   - Run the app, switch to Malay ("MS" button), and check the UI.
+5. **Submit your changes:**
+   - Commit and push to GitHub, or open a pull request if contributing.
+
+**Tip:**
+- The app will always fall back to English if a Malay translation is missing.
+- Only translate what you are 100% sure is correct!
 
 ## 🚀 Getting Started
 
@@ -192,6 +238,29 @@ This project is specifically developed for Epic Homes' traditional house constru
 
 For technical support or feature requests, please create an issue in the repository or contact:
 mehulgup1001@gmail.com
+
+## ♿ Accessibility
+
+- All interactive elements use accessibility props and labels.
+- Color contrast meets WCAG standards where possible.
+- AR features provide feedback for unsupported devices or poor tracking conditions.
+- If you have accessibility feedback, please open an issue.
+
+## 🧪 Testing & CI/CD
+
+- **Linting:** Run `npm run lint` to check code style and errors.
+- **Testing:** Run `npm test` for unit and integration tests (Jest).
+- **CI/CD:** Automated with GitHub Actions (`.github/workflows/ci.yml`) for linting and tests on every push/PR.
+- **Builds:** Use `npm run prebuild` and Android Studio for production APKs.
+
+## 🗺️ Roadmap
+
+- [ ] Bahasa Melayu (Malay) language support
+- [ ] i18n for additional languages
+- [ ] iOS production build and ARKit support
+- [ ] More traditional house models
+- [ ] Enhanced accessibility features
+- [ ] Community-contributed guides and materials
 
 ---
 

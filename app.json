@@ -10,6 +10,7 @@
     ],
     "jsEngine": "hermes",
     "newArchEnabled": true,
+    "description": "An AR app for visualizing and constructing traditional Malaysian houses. UI in English; Bahasa Melayu support planned.",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.epichomesar",
