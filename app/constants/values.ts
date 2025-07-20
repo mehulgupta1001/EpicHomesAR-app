@@ -6,16 +6,30 @@ export const DIMENSIONS = {
 };
 
 export const COLORS = {
-  PRIMARY: '#007AFF',
-  SECONDARY: '#cccccc',
-  BACKGROUND: '#2c2c2c',
-  CARD_BG: 'rgba(255,255,255,0.1)',
-  CARD_SELECTED: 'rgba(0,122,255,0.1)',
-  CARD_BORDER: '#007AFF',
-  WHITE: '#ffffff',
-  ERROR: '#d32f2f',
-  WARNING: '#ff9800',
-  SUCCESS: '#4caf50',
+  light: {
+    tint: '#007AFF',
+    icon: '#007AFF',
+    background: '#fff',
+    cardBg: 'rgba(255,255,255,0.1)',
+    cardSelected: 'rgba(0,122,255,0.1)',
+    cardBorder: '#007AFF',
+    white: '#ffffff',
+    error: '#d32f2f',
+    warning: '#ff9800',
+    success: '#4caf50',
+  },
+  dark: {
+    tint: '#fff',
+    icon: '#fff',
+    background: '#2c2c2c',
+    cardBg: 'rgba(255,255,255,0.1)',
+    cardSelected: 'rgba(0,122,255,0.1)',
+    cardBorder: '#007AFF',
+    white: '#ffffff',
+    error: '#d32f2f',
+    warning: '#ff9800',
+    success: '#4caf50',
+  },
 };
 
 export enum TimeEstimates {
