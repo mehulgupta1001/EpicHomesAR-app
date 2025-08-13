@@ -30,6 +30,16 @@ export const COLORS = {
     warning: '#ff9800',
     success: '#4caf50',
   },
+  // Direct access properties for backward compatibility
+  WHITE: '#ffffff',
+  BACKGROUND: '#2c2c2c',
+  PRIMARY: '#007AFF',
+  SECONDARY: '#666666',
+  CARD_BG: 'rgba(255,255,255,0.1)',
+  CARD_BORDER: '#007AFF',
+  ERROR: '#d32f2f',
+  WARNING: '#ff9800',
+  SUCCESS: '#4caf50',
 };
 
 export enum TimeEstimates {

@@ -1,30 +1,26 @@
 import {
-    Viro3DObject,
-    ViroARPlaneSelector,
-    ViroARScene,
-    ViroARSceneNavigator,
-    ViroAmbientLight,
-    ViroMaterials,
-    ViroNode,
-    ViroPolyline,
-    ViroQuad,
-    ViroSpotLight,
-    ViroText
+  Viro3DObject,
+  ViroARPlaneSelector,
+  ViroARScene,
+  ViroARSceneNavigator,
+  ViroAmbientLight,
+  ViroMaterials,
+  ViroNode,
+  ViroPolyline,
+  ViroQuad,
+  ViroSpotLight,
+  ViroText
 } from '@reactvision/react-viro';
 import { ViroARTrackingReasonConstants, ViroTrackingStateConstants } from '@reactvision/react-viro/dist/components/ViroConstants';
-import { Asset } from 'expo-asset';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import houseTexture from '../../assets/models/houses/gltf_embedded_0.jpeg';
-import houseModelFile from '../../assets/models/houses/house.glb';
 import { HouseType } from '../constants/houseTypes';
-import { COLORS } from '../constants/values';
 import type { MetricCategory, MetricName } from '../utils/performanceMonitor';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { LoadingOverlay } from './LoadingOverlay';
-
-// Define house model URI outside component for better performance
-const houseModel = Asset.fromModule(houseModelFile).uri;
+// Define house model path as static asset
+const houseModel = '../../assets/models/houses/house.glb';
 
 // Define materials for different house types and parts
 ViroMaterials.createMaterials({
@@ -33,61 +29,61 @@ ViroMaterials.createMaterials({
     diffuseColor: '#8D6E63',
     roughness: 0.7,
     metalness: 0.1,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   meranti: {
     diffuseColor: '#A1887F',
     roughness: 0.6,
     metalness: 0.1,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   bamboo: {
     diffuseColor: '#D7CCC8',
     roughness: 0.5,
     metalness: 0.1,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   // Roofing materials
   nipah: {
     diffuseColor: '#795548',
     roughness: 0.8,
     metalness: 0.1,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   rumbia: {
     diffuseColor: '#6D4C41',
     roughness: 0.8,
     metalness: 0.1,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   'bamboo-shingle': {
     diffuseColor: '#5D4037',
     roughness: 0.6,
     metalness: 0.1,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   // Binding materials
   rattan: {
     diffuseColor: '#8D6E63',
     roughness: 0.7,
     metalness: 0.1,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   'natural-fiber': {
     diffuseColor: '#A1887F',
     roughness: 0.8,
     metalness: 0.1,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   'modern-binding': {
     diffuseColor: '#6D4C41',
     roughness: 0.5,
     metalness: 0.2,
-    lightingModel: "Physical",
+    lightingModel: "PBR",
   },
   houseTextureMaterial: {
     diffuseTexture: { uri: houseTexture },
-    lightingModel: 'Physical',
+    lightingModel: 'PBR',
   },
   measurementLine: {
     diffuseColor: '#00ff00',
@@ -293,8 +289,7 @@ export const ARView: React.FC<ARViewProps> = ({
                   text="Tap on the surface to place the house"
                   scale={[0.5, 0.5, 0.5]}
                   position={[0, 0, -1]}
-                  fontSize={16}
-                  color={COLORS.WHITE}
+                  color="#FFFFFF"
                   accessible={true}
                   accessibilityLabel="Tap on the surface to place the house"
                 />
@@ -305,7 +300,7 @@ export const ARView: React.FC<ARViewProps> = ({
         style={styles.arView}
       />
 
-      {isLoading && <LoadingOverlay message="Loading 3D Model..." accessible={true} accessibilityLabel="Loading 3D Model" />}
+      {isLoading && <LoadingOverlay message="Loading 3D Model..." />}
     </View>
   );
 };

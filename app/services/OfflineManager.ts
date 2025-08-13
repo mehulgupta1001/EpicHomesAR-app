@@ -2,10 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 import { Alert } from 'react-native';
-import houseModelFile from '../../assets/models/houses/house.glb';
-import traditionalMalayModelFile from '../../assets/models/houses/traditional-malay-house.glb';
-const houseModel = Asset.fromModule(houseModelFile).uri;
-const traditionalMalayModel = Asset.fromModule(traditionalMalayModelFile).uri;
+// Define house model paths as static assets
+const houseModel = '../../assets/models/houses/house.glb';
+const traditionalMalayModel = '../../assets/models/houses/traditional-malay-house.glb';
 
 interface CachedAsset {
   uri: string;
