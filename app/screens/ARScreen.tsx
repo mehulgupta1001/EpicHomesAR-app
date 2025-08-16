@@ -563,9 +563,6 @@ export const ARScreen: React.FC = () => {
         onRotateLeft={handleRotateLeft}
         onRotateRight={handleRotateRight}
         onMeasurementsUpdate={handleMeasurementsUpdate}
-        rotation={rotation}
-        selectedHouse={undefined}
-        selectedMaterials={{}}
       />
 
       {showTutorial && <Tutorial onComplete={handleTutorialComplete} />}

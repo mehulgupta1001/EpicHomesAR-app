@@ -1,7 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import i18n from 'i18n-js';
 import React from 'react';
 import { Button, Text, View } from 'react-native';
 import { t } from './app/constants/i18n';
@@ -14,10 +13,7 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [lang, setLang] = React.useState('en');
-  React.useEffect(() => {
-    // @ts-ignore
-    i18n.locale = lang;
-  }, [lang]);
+  
   return (
     <>
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', padding: 8 }}>

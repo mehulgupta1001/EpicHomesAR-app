@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 import { Alert } from 'react-native';
-// Define house model paths as static assets
+// Define house model paths as direct strings
 const houseModel = '../../assets/models/houses/house.glb';
 const traditionalMalayModel = '../../assets/models/houses/traditional-malay-house.glb';
 

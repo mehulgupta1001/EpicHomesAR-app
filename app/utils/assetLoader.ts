@@ -1,6 +1,6 @@
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
-// Import assets using Asset API directly
+// Import assets using direct string paths
 const houseModel = '../../assets/models/houses/house.glb';
 const traditionalMalayModel = '../../assets/models/houses/traditional-malay-house.glb';
 
