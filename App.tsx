@@ -13,7 +13,7 @@ import { HomeScreen } from './app/screens/HomeScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [lang, setLang] = React.useState(i18n.locale);
+  const [lang, setLang] = React.useState('en');
   React.useEffect(() => {
     // @ts-ignore
     i18n.locale = lang;

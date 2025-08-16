@@ -6,7 +6,7 @@ export interface HouseType {
   id: string;
   name: string;
   description: string;
-  model: ImageSourcePropType;
+  model: string; // Changed from ImageSourcePropType to string for GLB file URIs
   thumbnail: ImageSourcePropType;
   dimensions: {
     width: number;

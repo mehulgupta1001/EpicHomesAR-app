@@ -18,7 +18,9 @@
         "NSCameraUsageDescription": "Epic Homes AR needs access to your camera for augmented reality features.",
         "NSPhotoLibraryUsageDescription": "Epic Homes AR needs access to your photo library to save construction progress photos.",
         "NSPhotoLibraryAddUsageDescription": "Epic Homes AR needs access to your photo library to save construction progress photos.",
-        "UIRequiresFullScreen": true
+        "UIRequiresFullScreen": true,
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use your microphone",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -31,14 +33,7 @@
       "versionCode": 1
     },
     "plugins": [
-      [
-        "@reactvision/react-viro",
-        {
-          "android": {
-            "xRMode": ["AR"]
-          }
-        }
-      ],
+      "@reactvision/react-viro",
       "expo-system-ui"
     ],
     "extra": {
