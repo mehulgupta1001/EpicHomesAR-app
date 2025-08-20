@@ -11,9 +11,9 @@ import {
     ViroSpotLight,
     ViroText
 } from '@reactvision/react-viro';
-import { Asset } from 'expo-asset';
 import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
+import { Asset } from 'expo-asset';
 import { LoadingOverlay } from './LoadingOverlay';
 
 // Use proper Asset API for GLB file

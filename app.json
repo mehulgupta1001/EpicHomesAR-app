@@ -33,7 +33,8 @@
       "versionCode": 1
     },
     "plugins": [
-      "expo-system-ui"
+      "expo-system-ui",
+      "@reactvision/react-viro"
     ],
     "extra": {
       "eas": {
