@@ -1,21 +1,23 @@
 import {
-  Viro3DObject,
-  ViroAmbientLight,
-  ViroAnimations,
-  ViroARPlaneSelector,
-  ViroARScene,
-  ViroButton,
-  ViroFlexView,
-  ViroMaterials,
-  ViroNode,
-  ViroSpotLight,
-  ViroText
+    Viro3DObject,
+    ViroAmbientLight,
+    ViroAnimations,
+    ViroARPlaneSelector,
+    ViroARScene,
+    ViroButton,
+    ViroFlexView,
+    ViroMaterials,
+    ViroNode,
+    ViroSpotLight,
+    ViroText
 } from '@reactvision/react-viro';
+import { Asset } from 'expo-asset';
 import React, { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { LoadingOverlay } from './LoadingOverlay';
 
-// Use direct string path for GLB file
-const houseModel = '../../assets/models/houses/house.glb';
+// Use proper Asset API for GLB file
+const houseModel = Asset.fromModule(require('../../assets/models/houses/house.glb')).uri;
 
 interface ARViewProps {
   onPlacementComplete?: () => void;
@@ -42,13 +44,24 @@ export const ARView: React.FC<ARViewProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [housePlaced, setHousePlaced] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [arError, setArError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate loading time for assets
-    setTimeout(() => {
-      setIsLoading(false);
-      setText('Point camera at a flat surface');
-    }, 2000);
+    // Check for AR compatibility
+    const checkARCompatibility = async () => {
+      try {
+        // Simulate loading time for assets
+        setTimeout(() => {
+          setIsLoading(false);
+          setText('Point camera at a flat surface');
+        }, 2000);
+      } catch (error) {
+        setArError('AR not supported on this device');
+        Alert.alert('AR Error', 'This device does not support AR features. Please use a compatible device.');
+      }
+    };
+    
+    checkARCompatibility();
   }, []);
 
   const onInitialized = (state: any, reason: any) => {
@@ -56,22 +69,28 @@ export const ARView: React.FC<ARViewProps> = ({
       setText('Surface detected! Tap to place house');
     } else if (state === 'TRACKING_NONE') {
       setText('No surface detected');
+    } else if (state === 'TRACKING_LIMITED') {
+      setText('Poor tracking - move device slowly');
     }
   };
 
   const handlePlacement = () => {
-    setHousePlaced(true);
-    setText('House placed! Use gestures to interact');
-    onPlacementComplete?.();
-    
-    // Update measurements
-    const measurements = {
-      width: 8.5,
-      length: 12.0,
-      height: 3.2,
-      platformHeight: 0.3
-    };
-    onMeasurementsUpdate?.(measurements);
+    try {
+      setHousePlaced(true);
+      setText('House placed! Use gestures to interact');
+      onPlacementComplete?.();
+      
+      // Update measurements
+      const measurements = {
+        width: 8.5,
+        length: 12.0,
+        height: 3.2,
+        platformHeight: 0.3
+      };
+      onMeasurementsUpdate?.(measurements);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to place house. Please try again.');
+    }
   };
 
   const nextStep = () => {
@@ -112,6 +131,12 @@ export const ARView: React.FC<ARViewProps> = ({
 
   if (isLoading) {
     return <LoadingOverlay message="Loading AR Experience..." />;
+  }
+
+  if (arError) {
+    return (
+      <LoadingOverlay message={`AR Error: ${arError}`} />
+    );
   }
 
   return (
@@ -157,7 +182,6 @@ export const ARView: React.FC<ARViewProps> = ({
                   fontFamily: 'Arial',
                   fontSize: 20,
                   color: '#ffffff',
-                  textAlignVertical: 'center',
                   textAlign: 'center',
                 }}
               />
@@ -196,7 +220,6 @@ export const ARView: React.FC<ARViewProps> = ({
           fontFamily: 'Arial',
           fontSize: 30,
           color: '#ffffff',
-          textAlignVertical: 'center',
           textAlign: 'center',
         }}
       />

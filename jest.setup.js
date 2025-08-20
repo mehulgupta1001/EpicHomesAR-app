@@ -1,3 +1,6 @@
+/* eslint-env jest */
+/* global jest */
+
 // Mock ViroReact components for testing
 jest.mock('@reactvision/react-viro', () => ({
   ViroARScene: 'ViroARScene',
