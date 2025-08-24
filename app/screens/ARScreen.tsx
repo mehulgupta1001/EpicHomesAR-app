@@ -3,7 +3,7 @@ import * as Sharing from 'expo-sharing';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
-import { ARView } from '../components/ARView';
+import ARView from '../components/ARView';
 import { InfoPanel } from '../components/InfoPanel';
 import { Tutorial } from '../components/Tutorial';
 import { offlineManager } from '../services/OfflineManager';
