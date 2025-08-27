@@ -1,0 +1,5 @@
+[33meb67920[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Update README.md with comprehensive project status
+[33mdb94c65[m Fix critical routing and asset loading errors
+[33meb51f55[m Fix ARView component formatting
+[33m5a17757[m Restore ViroReact AR functionality with proper Android configuration
+[33mfd4cd6c[m Remove ViroReact plugin temporarily for basic build
