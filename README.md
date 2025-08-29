@@ -10,7 +10,7 @@ An advanced augmented reality application for visualizing and constructing tradi
 - ✅ **ALL Gradle Build Errors Fixed** - Android build configuration corrected
 - ✅ **Zero TypeScript Errors** - Complete codebase audit completed
 - ✅ **Zero Metro Bundler Errors** - All module resolution issues fixed
-- ✅ **Custom AR Solution Implemented** - Full AR experience without ViroReact dependency conflicts
+- ✅ **ViroReact AR Implemented** - Full AR experience with ViroReact for advanced 3D visualization
 - ✅ **Tested on Expo Go** - Ready for immediate testing on devices
 - ✅ **Ready for Production APK** - All blocking issues resolved for Epic Homes deployment
 
@@ -20,7 +20,7 @@ Epic Homes AR is a comprehensive AR-powered construction visualization tool desi
 
 ## ✨ Key Features
 
-- [x] **Custom AR Simulation** - Full AR experience with surface detection and house placement
+- [x] **ViroReact AR Experience** - Full AR experience with surface detection and house placement
 - [x] **Interactive 3D Visualization** - Place and explore traditional house models in real environments
 - [x] **Two detailed house models** (Orang Asli, Traditional Malay) 
 - [x] **Material customization** (wood, roofing, binding materials)
@@ -88,9 +88,9 @@ Epic Homes AR is a comprehensive AR-powered construction visualization tool desi
    - Fixed Android manifest and build.gradle issues
    - Resolved native module conflicts
 
-4. **ViroReact Compatibility** - Replaced with custom AR solution
-   - Implemented full-featured AR simulation
-   - Maintained all AR functionality without dependency conflicts
+4. **ViroReact Compatibility** - Fixed React Native version compatibility
+   - Updated React Native to 0.79.5 for ViroReact compatibility
+   - Maintained all AR functionality with ViroReact
    - Ensured compatibility with current Expo SDK
 
 5. **Module Resolution** - Fixed Metro bundler conflicts
