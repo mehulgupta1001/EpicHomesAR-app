@@ -29,7 +29,7 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.featureGrid}>
           {features.map((feature, index) => (
             <View key={index} style={styles.featureCard}>
-              <MaterialIcons name={feature.icon as any} size={32} color="#007AFF" />
+              <MaterialIcons name={feature.icon as any} size={32} color="#ff9100" />
               <Text style={styles.featureTitle}>{feature.title}</Text>
               <Text style={styles.featureDescription}>{feature.description}</Text>
             </View>
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   },
   hero: {
     height: 300,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#ff9100',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   startButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#ff9100',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
