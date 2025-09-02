@@ -4,10 +4,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import ARView from '../components/ARView';
+import { HouseSelector } from '../components/HouseSelector';
 import { InfoPanel } from '../components/InfoPanel';
+import { MaterialCustomizer } from '../components/MaterialCustomizer';
 import { Tutorial } from '../components/Tutorial';
 import { offlineManager } from '../services/OfflineManager';
 import { ConstructionProgress, StorageService } from '../services/storage';
+import { HouseType, HOUSE_TYPES } from '../constants/houseTypes';
 
 interface Measurements {
   width: number;
@@ -302,6 +305,11 @@ export const ARScreen: React.FC = () => {
   const [measurements, setMeasurements] = useState<Measurements | null>(null);
   const [progress, setProgress] = useState<ConstructionProgress[]>([]);
   const [showTutorial, setShowTutorial] = useState(true);
+  const [selectedHouseType, setSelectedHouseType] = useState<HouseType>(HOUSE_TYPES[0]);
+  const [selectedMaterials, setSelectedMaterials] = useState<Record<string, string>>({});
+  const [selectedWallColor, setSelectedWallColor] = useState<{ name: string; value: string; material: string } | undefined>();
+  const [showMaterialCustomizer, setShowMaterialCustomizer] = useState(false);
+  const [showHouseSelector, setShowHouseSelector] = useState(false);
 
   useEffect(() => {
     loadSavedProgress();
@@ -426,6 +434,25 @@ export const ARScreen: React.FC = () => {
 
   const handleRotateRight = () => {
     setRotation(prev => prev + 45);
+  };
+
+  const handleMaterialChange = (categoryId: string, materialId: string) => {
+    setSelectedMaterials(prev => ({
+      ...prev,
+      [categoryId]: materialId
+    }));
+  };
+
+  const handleWallColorChange = (color: { name: string; value: string; material: string }) => {
+    setSelectedWallColor(color);
+  };
+
+  const handleOpenMaterialCustomizer = () => {
+    setShowMaterialCustomizer(true);
+  };
+
+  const handleCloseMaterialCustomizer = () => {
+    setShowMaterialCustomizer(false);
   };
 
   const viewRef = useRef<View>(null);
@@ -559,6 +586,7 @@ export const ARScreen: React.FC = () => {
   return (
     <View style={styles.container} ref={viewRef}>
       <ARView
+        selectedHouse={selectedHouseType}
         onPlacementComplete={handlePlacementComplete}
         onRotateLeft={handleRotateLeft}
         onRotateRight={handleRotateRight}
@@ -571,6 +599,12 @@ export const ARScreen: React.FC = () => {
       <View style={styles.topBar}>
         <TouchableOpacity
           style={styles.iconButton}
+          onPress={() => setShowHouseSelector(!showHouseSelector)}
+        >
+          <MaterialIcons name="home" size={24} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.iconButton}
           onPress={() => setShowInfo(true)}
         >
           <MaterialIcons name="info" size={24} color="white" />
@@ -580,6 +614,12 @@ export const ARScreen: React.FC = () => {
           onPress={() => setShowMeasurements(!showMeasurements)}
         >
           <MaterialIcons name="straighten" size={24} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={handleOpenMaterialCustomizer}
+        >
+          <MaterialIcons name="palette" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.iconButton}
@@ -627,6 +667,37 @@ export const ARScreen: React.FC = () => {
         onClose={() => setShowInfo(false)}
         visible={showInfo}
       />
+
+      {/* Material Customizer */}
+      {showMaterialCustomizer && (
+        <MaterialCustomizer
+          onClose={handleCloseMaterialCustomizer}
+          onMaterialChange={handleMaterialChange}
+          onWallColorChange={handleWallColorChange}
+          selectedMaterials={selectedMaterials}
+          selectedHouse={selectedHouseType}
+          selectedWallColor={selectedWallColor}
+        />
+      )}
+
+      {/* House Selector */}
+      {showHouseSelector && (
+        <View style={styles.houseSelectorOverlay}>
+          <HouseSelector
+            onSelect={(house) => {
+              setSelectedHouseType(house);
+              setShowHouseSelector(false);
+            }}
+            selectedHouseId={selectedHouseType.id}
+          />
+          <TouchableOpacity
+            style={styles.closeHouseSelectorButton}
+            onPress={() => setShowHouseSelector(false)}
+          >
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -831,5 +902,28 @@ const styles = StyleSheet.create({
     color: 'white',
     minHeight: 100,
     textAlignVertical: 'top',
+  },
+  // House Selector Styles
+  houseSelectorOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeHouseSelectorButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginTop: 16,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 
