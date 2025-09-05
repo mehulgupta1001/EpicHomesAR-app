@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { ModelViewer } from './ModelViewer';
 
 interface ARViewProps {
   selectedHouse?: any;
@@ -149,12 +150,8 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
                 <Text style={styles.modelTitle}>🏠 {modelInfo.name}</Text>
                 <Text style={styles.modelDescription}>{modelInfo.description}</Text>
                 
-                {/* 3D Model Placeholder - This would be replaced with actual 3D rendering */}
-                <View style={styles.model3D}>
-                  <Text style={styles.model3DText}>3D MODEL</Text>
-                  <Text style={styles.model3DSubtext}>Epic Homes House</Text>
-                  <Text style={styles.model3DSubtext}>Scale: 1:1</Text>
-                </View>
+                {/* Epic Homes 3D Model Display */}
+                <ModelViewer selectedHouse={selectedHouse} style={styles.modelViewer} />
 
                 {/* AR Controls */}
                 <View style={styles.arControls}>
@@ -298,6 +295,10 @@ const styles = StyleSheet.create({
   modelContainer: {
     alignItems: 'center',
   },
+  modelViewer: {
+    width: '100%',
+    marginBottom: 15,
+  },
   modelTitle: {
     color: 'white',
     fontSize: 24,
@@ -329,6 +330,22 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     marginBottom: 2,
+  },
+  modelPreview: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modelPreviewText: {
+    fontSize: 24,
+    marginBottom: 5,
+  },
+  modelPreviewLabel: {
+    color: '#ff9100',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   arControls: {
     flexDirection: 'row',
