@@ -307,7 +307,6 @@ export const ARScreen: React.FC = () => {
   const [showTutorial, setShowTutorial] = useState(true);
   const [selectedHouseType, setSelectedHouseType] = useState<HouseType>(HOUSE_TYPES[0]);
   const [selectedMaterials, setSelectedMaterials] = useState<Record<string, string>>({});
-  const [selectedWallColor, setSelectedWallColor] = useState<{ name: string; value: string; material: string } | undefined>();
   const [showMaterialCustomizer, setShowMaterialCustomizer] = useState(false);
   const [showHouseSelector, setShowHouseSelector] = useState(false);
 
@@ -441,10 +440,6 @@ export const ARScreen: React.FC = () => {
       ...prev,
       [categoryId]: materialId
     }));
-  };
-
-  const handleWallColorChange = (color: { name: string; value: string; material: string }) => {
-    setSelectedWallColor(color);
   };
 
   const handleOpenMaterialCustomizer = () => {
@@ -673,10 +668,8 @@ export const ARScreen: React.FC = () => {
         <MaterialCustomizer
           onClose={handleCloseMaterialCustomizer}
           onMaterialChange={handleMaterialChange}
-          onWallColorChange={handleWallColorChange}
           selectedMaterials={selectedMaterials}
           selectedHouse={selectedHouseType}
-          selectedWallColor={selectedWallColor}
         />
       )}
 
