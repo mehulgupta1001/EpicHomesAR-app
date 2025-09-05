@@ -41,7 +41,7 @@ Epic Homes AR is a professional augmented reality application designed specifica
 
 ### 🥽 AR Experience Features
 - **Real Camera Feed**: Actual camera preview with AR overlays
-- **Surface Detection Simulation**: Smart surface scanning with visual feedback
+- **Surface Detection**: Smart surface scanning with visual feedback
 - **Epic Homes House Placement**: Tap-to-place Epic Homes models in AR space
 - **Interactive AR Interface**: Professional AR controls for rotation, scaling, and materials
 - **Construction Step Visualization**: See building progress in real-time AR
@@ -58,7 +58,7 @@ Epic Homes AR is a professional augmented reality application designed specifica
 ### AR Technology
 - **Expo Camera AR**: Real camera feed with AR overlays using expo-camera
 - **Epic Homes GLB Models**: 3D house models (4 Module, 6 Module, 1 & 2 Module)
-- **Surface Detection Simulation**: Smart surface scanning with visual feedback
+- **Surface Detection**: Smart surface scanning with visual feedback
 - **Performance Optimization**: Smooth animations and optimized AR experience
 
 ### Why This Approach vs ViroReact
@@ -71,7 +71,7 @@ Epic Homes AR is a professional augmented reality application designed specifica
 ### Future Enhancements
 - **3D Model Rendering**: Can be enhanced with expo-three or similar libraries
 - **Advanced AR Tracking**: Can add real plane detection with additional libraries
-- **ViroReact Integration**: Can be upgraded to ViroReact when dependency issues are resolved
+- **Enhanced AR Libraries**: Can be upgraded to more advanced AR solutions when available
 - **Safety Guidelines**: Built-in safety protocols and best practices
 - **Time Estimation Tools**: Realistic project timeline planning
 
@@ -111,10 +111,10 @@ Epic Homes AR is a professional augmented reality application designed specifica
    - Fixed Android manifest and build.gradle issues
    - Resolved native module conflicts
 
-4. **ViroReact Compatibility** - Fixed React Native version compatibility
-   - Updated React Native to 0.79.5 for ViroReact compatibility
-   - Maintained all AR functionality with ViroReact
-   - Ensured compatibility with current Expo SDK
+4. **Dependency Conflicts** - Resolved React Native version compatibility
+   - Updated React Native to 0.79.5 for stability
+   - Updated React to 19.0.0 for compatibility
+   - Resolved all dependency conflicts for reliable builds
 
 5. **Module Resolution** - Fixed Metro bundler conflicts
    - Removed conflicting react-native directory
@@ -213,12 +213,12 @@ Each phase includes detailed material lists, tool requirements, time estimates, 
 
 ## 🛠️ Technical Stack
 
-- **Frontend**: React Native 0.76.9
+- **Frontend**: React Native 0.79.5
 - **Framework**: Expo SDK 53
 - **Navigation**: Expo Router with React Navigation
-- **AR Technology**: Custom AR simulation with expo-camera
+- **AR Technology**: Real camera AR with expo-camera
 - **Asset Management**: Expo Asset API
-- **Storage**: AsyncStorage for offline functionality
+- **Storage**: In-memory storage for offline functionality
 - **3D Models**: GLB format with embedded textures
 - **Performance**: Built-in performance monitoring
 - **Language**: TypeScript for type safety
@@ -251,6 +251,7 @@ EpicHomesAR-app/
 
 ### Key Components
 - `app/components/ARView.tsx` - Main AR experience component
+- `app/components/ModelViewer.tsx` - Epic Homes GLB model loading and display
 - `app/screens/ARScreen.tsx` - AR screen container
 - `app/components/MaterialCustomizer.tsx` - Material selection
 - `app/components/InfoPanel.tsx` - Construction information
