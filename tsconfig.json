@@ -5,7 +5,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["app/*"]
-    }
+    },
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
   },
   "include": [
     "**/*.ts",
