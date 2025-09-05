@@ -1,10 +1,18 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// Using Expo's built-in storage - will need to implement with expo-secure-store or similar
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 import { Alert } from 'react-native';
-// Define house model paths as direct strings
-const houseModel = '../../assets/models/houses/house.glb';
-const traditionalMalayModel = '../../assets/models/houses/traditional-malay-house.glb';
+import houseModelAsset from '../../assets/models/houses/house.glb';
+import traditionalMalayModelAsset from '../../assets/models/houses/traditional-malay-house.glb';
+
+// Temporary in-memory storage for development
+let memoryStorage: { [key: string]: string } = {};
+
+// Define house model paths using Asset API
+
+const houseModel = Asset.fromModule(houseModelAsset).uri;
+const traditionalMalayModel = Asset.fromModule(traditionalMalayModelAsset).uri;
 
 interface CachedAsset {
   uri: string;
@@ -32,8 +40,8 @@ class OfflineManager {
       // Create offline assets directory if it doesn't exist
       await FileSystem.makeDirectoryAsync(this.assetDirectory, { intermediates: true });
       
-      // Load cached assets info from storage
-      const cachedData = await AsyncStorage.getItem(this.CACHE_KEY);
+      // Load cached assets info from storage (using in-memory storage for now)
+      const cachedData = memoryStorage[this.CACHE_KEY];
       if (cachedData) {
         this.cachedAssets = new Map(Object.entries(JSON.parse(cachedData)));
       }
@@ -86,10 +94,7 @@ class OfflineManager {
 
   private async saveCacheInfo(): Promise<void> {
     try {
-      await AsyncStorage.setItem(
-        this.CACHE_KEY,
-        JSON.stringify(Object.fromEntries(this.cachedAssets))
-      );
+      memoryStorage[this.CACHE_KEY] = JSON.stringify(Object.fromEntries(this.cachedAssets));
     } catch (error) {
       console.error('Error saving cache info:', error);
       throw error;
@@ -107,7 +112,7 @@ class OfflineManager {
   async clearCache(): Promise<void> {
     try {
       await FileSystem.deleteAsync(this.assetDirectory, { idempotent: true });
-      await AsyncStorage.removeItem(this.CACHE_KEY);
+      delete memoryStorage[this.CACHE_KEY];
       this.cachedAssets.clear();
       await this.initialize(); // Reinitialize cache with required assets
     } catch (error) {

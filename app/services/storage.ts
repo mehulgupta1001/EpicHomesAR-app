@@ -1,4 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// Using Expo's built-in storage - will need to implement with expo-secure-store or similar
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface ConstructionProgress {
   stepIndex: number;
@@ -12,13 +13,13 @@ const STORAGE_KEYS = {
   CONSTRUCTION_PROGRESS: 'construction_progress',
 };
 
+// In-memory storage for development
+let memoryStorage: { [key: string]: string } = {};
+
 export const StorageService = {
   saveProgress: async (progress: ConstructionProgress[]) => {
     try {
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.CONSTRUCTION_PROGRESS,
-        JSON.stringify(progress)
-      );
+      memoryStorage[STORAGE_KEYS.CONSTRUCTION_PROGRESS] = JSON.stringify(progress);
       return true;
     } catch (error) {
       console.error('Error saving progress:', error);
@@ -28,7 +29,7 @@ export const StorageService = {
 
   loadProgress: async (): Promise<ConstructionProgress[] | null> => {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.CONSTRUCTION_PROGRESS);
+      const data = memoryStorage[STORAGE_KEYS.CONSTRUCTION_PROGRESS];
       return data ? JSON.parse(data) : null;
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -38,7 +39,7 @@ export const StorageService = {
 
   clearProgress: async () => {
     try {
-      await AsyncStorage.removeItem(STORAGE_KEYS.CONSTRUCTION_PROGRESS);
+      delete memoryStorage[STORAGE_KEYS.CONSTRUCTION_PROGRESS];
       return true;
     } catch (error) {
       console.error('Error clearing progress:', error);

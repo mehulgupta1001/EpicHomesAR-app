@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// Using Expo's built-in storage - will need to implement with expo-secure-store or similar
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     Animated,
@@ -76,7 +77,8 @@ export const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
 
   const checkTutorialStatus = useCallback(async () => {
     try {
-      const completed = await AsyncStorage.getItem(TUTORIAL_KEY);
+      // Using in-memory storage for now
+      const completed = null; // TODO: Implement proper storage
       if (completed === 'true') {
         setVisible(false);
         onComplete();
@@ -105,7 +107,8 @@ export const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
       animateIn();
     } else {
       try {
-        await AsyncStorage.setItem(TUTORIAL_KEY, 'true');
+        // Using in-memory storage for now
+        // TODO: Implement proper storage
         setVisible(false);
         onComplete();
       } catch (error) {

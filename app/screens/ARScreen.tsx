@@ -8,9 +8,9 @@ import { HouseSelector } from '../components/HouseSelector';
 import { InfoPanel } from '../components/InfoPanel';
 import { MaterialCustomizer } from '../components/MaterialCustomizer';
 import { Tutorial } from '../components/Tutorial';
+import { HOUSE_TYPES, HouseType } from '../constants/houseTypes';
 import { offlineManager } from '../services/OfflineManager';
 import { ConstructionProgress, StorageService } from '../services/storage';
-import { HouseType, HOUSE_TYPES } from '../constants/houseTypes';
 
 interface Measurements {
   width: number;
