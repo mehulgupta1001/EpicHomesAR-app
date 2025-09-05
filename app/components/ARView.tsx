@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ModelViewer } from './ModelViewer';
 
 interface ARViewProps {
