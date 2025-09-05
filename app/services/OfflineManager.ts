@@ -1,6 +1,7 @@
 // Using Expo's built-in storage - will need to implement with expo-secure-store or similar
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Asset } from 'expo-asset';
+// @ts-ignore - expo-file-system type declarations issue
 import * as FileSystem from 'expo-file-system';
 import { Alert } from 'react-native';
 import houseModelAsset from '../../assets/models/houses/house.glb';
@@ -73,7 +74,7 @@ class OfflineManager {
           await FileSystem.downloadAsync(assetUri, targetPath);
           const info = await FileSystem.getInfoAsync(targetPath) as FileSystem.FileInfo;
           let size = 0;
-          if (info.exists) {
+          if (info.exists && info.size) {
             size = info.size;
           }
           this.cachedAssets.set(assetName, {
