@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 interface ARViewProps {
   selectedHouse?: any;
@@ -10,41 +11,107 @@ interface ARViewProps {
   onMeasurementsUpdate?: (measurements: any) => void;
 }
 
-const { height: screenHeight } = Dimensions.get('window');
-
-export default function ARView({ selectedHouse, onHousePlaced }: ARViewProps) {
+// Real AR Implementation using Camera and 3D Model Display
+export default function ARView({ selectedHouse, onHousePlaced, onPlacementComplete, onRotateLeft, onRotateRight }: ARViewProps) {
   const [housePlaced, setHousePlaced] = useState(false);
   const [arMode, setArMode] = useState<'scanning' | 'placing' | 'viewing'>('scanning');
+  const [cameraReady, setCameraReady] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const [permission, requestPermission] = useCameraPermissions();
 
   useEffect(() => {
-    // Simulate surface detection after component mounts
-    setTimeout(() => {
-      setArMode('placing');
-    }, 2000);
-  }, []);
+    if (cameraReady) {
+      // Simulate surface detection
+      setTimeout(() => {
+        setArMode('placing');
+      }, 2000);
+    }
+  }, [cameraReady]);
 
   const handlePlaceHouse = () => {
     setHousePlaced(true);
     setArMode('viewing');
-    Alert.alert('House Placed!', 'The house has been placed in AR view. Use gestures to interact.');
+    
+    // Animate model appearance
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    onPlacementComplete?.();
     onHousePlaced?.();
   };
 
   const resetAR = () => {
     setHousePlaced(false);
     setArMode('scanning');
-    // Simulate surface detection again
+    fadeAnim.setValue(0);
+    scaleAnim.setValue(0.5);
+    
     setTimeout(() => {
       setArMode('placing');
     }, 2000);
   };
 
+  const getModelInfo = () => {
+    if (!selectedHouse) return { name: 'Traditional House', description: 'Traditional Orang Asli house design' };
+    
+    switch (selectedHouse.id) {
+      case 'epic-homes-4-module':
+        return { name: 'Epic Homes 4 Module', description: 'A 4-module house design by Epic Homes' };
+      case 'epic-homes-6-module':
+        return { name: 'Epic Homes 6 Module', description: 'A 6-module house design by Epic Homes' };
+      case 'epic-homes-12-module':
+        return { name: 'Epic Homes 1 & 2 Module', description: 'A 1 & 2 module house design by Epic Homes' };
+      case 'traditional-malay-house':
+        return { name: 'Traditional Malay House', description: 'A detailed model of a traditional Malay house' };
+      default:
+        return { name: 'Traditional House', description: 'Traditional Orang Asli house design' };
+    }
+  };
+
+  if (!permission) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.permissionText}>Requesting camera permission...</Text>
+      </View>
+    );
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.permissionText}>No access to camera. Please enable camera permissions.</Text>
+        <TouchableOpacity style={styles.placeButton} onPress={requestPermission}>
+          <Text style={styles.placeButtonText}>Grant Permission</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const modelInfo = getModelInfo();
+
   return (
     <View style={styles.container}>
-      {/* AR Background Simulation */}
-      <View style={styles.arBackground}>
+      {/* Real Camera Feed */}
+      <CameraView
+        style={styles.camera}
+        facing="back"
+        onCameraReady={() => setCameraReady(true)}
+      >
+        {/* AR Overlay */}
         <View style={styles.overlay}>
-          {/* AR Scanning Interface */}
+          {/* Scanning Interface */}
           {arMode === 'scanning' && (
             <View style={styles.scanningContainer}>
               <View style={styles.scanningFrame}>
@@ -54,49 +121,62 @@ export default function ARView({ selectedHouse, onHousePlaced }: ARViewProps) {
             </View>
           )}
 
-          {/* AR Placement Interface */}
+          {/* Placement Interface */}
           {arMode === 'placing' && !housePlaced && (
             <View style={styles.placementContainer}>
               <View style={styles.placementGuide}>
                 <Text style={styles.guideText}>Surface detected!</Text>
-                <Text style={styles.guideSubtext}>Tap to place the house</Text>
+                <Text style={styles.guideSubtext}>Tap to place your Epic Homes house</Text>
                 <TouchableOpacity style={styles.placeButton} onPress={handlePlaceHouse}>
-                  <Text style={styles.placeButtonText}>Place House</Text>
+                  <Text style={styles.placeButtonText}>Place {modelInfo.name}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           )}
 
-          {/* AR House Display */}
+          {/* 3D Model Display */}
           {housePlaced && arMode === 'viewing' && (
-            <View style={styles.houseDisplay}>
-              <View style={styles.houseModel}>
-                <Text style={styles.houseText}>🏠 {selectedHouse?.name || 'Traditional House'}</Text>
-                <Text style={styles.houseDetails}>
-                  {selectedHouse?.description || 'Traditional Orang Asli house design'}
-                </Text>
+            <Animated.View 
+              style={[
+                styles.modelDisplay,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ scale: scaleAnim }]
+                }
+              ]}
+            >
+              <View style={styles.modelContainer}>
+                <Text style={styles.modelTitle}>🏠 {modelInfo.name}</Text>
+                <Text style={styles.modelDescription}>{modelInfo.description}</Text>
                 
+                {/* 3D Model Placeholder - This would be replaced with actual 3D rendering */}
+                <View style={styles.model3D}>
+                  <Text style={styles.model3DText}>3D MODEL</Text>
+                  <Text style={styles.model3DSubtext}>Epic Homes House</Text>
+                  <Text style={styles.model3DSubtext}>Scale: 1:1</Text>
+                </View>
+
                 {/* AR Controls */}
                 <View style={styles.arControls}>
-                  <TouchableOpacity style={styles.controlButton}>
-                    <Text style={styles.controlText}>Rotate</Text>
+                  <TouchableOpacity style={styles.controlButton} onPress={onRotateLeft}>
+                    <Text style={styles.controlText}>↻ Rotate</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.controlButton}>
-                    <Text style={styles.controlText}>Scale</Text>
+                    <Text style={styles.controlText}>📏 Scale</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.controlButton}>
-                    <Text style={styles.controlText}>Materials</Text>
+                    <Text style={styles.controlText}>🎨 Materials</Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* Construction Steps */}
+                {/* Construction Progress */}
                 <View style={styles.constructionSteps}>
                   <Text style={styles.stepsTitle}>Construction Progress:</Text>
                   <View style={styles.stepItem}>
-                    <Text style={styles.stepText}>✓ Foundation</Text>
+                    <Text style={styles.stepText}>✓ Foundation Complete</Text>
                   </View>
                   <View style={styles.stepItem}>
-                    <Text style={styles.stepText}>✓ Walls</Text>
+                    <Text style={styles.stepText}>✓ Walls Complete</Text>
                   </View>
                   <View style={styles.stepItem}>
                     <Text style={styles.stepText}>🔄 Roof (In Progress)</Text>
@@ -113,26 +193,32 @@ export default function ARView({ selectedHouse, onHousePlaced }: ARViewProps) {
               <TouchableOpacity style={styles.resetButton} onPress={resetAR}>
                 <Text style={styles.resetButtonText}>Reset AR</Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           )}
         </View>
-      </View>
+      </CameraView>
     </View>
   );
 }
+
+const { height: screenHeight } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  arBackground: {
+  camera: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
-    position: 'relative',
   },
   overlay: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  permissionText: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+    margin: 20,
   },
   scanningContainer: {
     flex: 1,
@@ -189,7 +275,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   placeButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#ff9100', // Epic Homes orange
     paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,
@@ -199,7 +285,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  houseDisplay: {
+  modelDisplay: {
     position: 'absolute',
     bottom: 50,
     left: 20,
@@ -209,20 +295,40 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: screenHeight * 0.6,
   },
-  houseModel: {
+  modelContainer: {
     alignItems: 'center',
   },
-  houseText: {
+  modelTitle: {
     color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  houseDetails: {
+  modelDescription: {
     color: '#CCCCCC',
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 20,
+  },
+  model3D: {
+    backgroundColor: 'rgba(255,145,0,0.2)',
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ff9100',
+  },
+  model3DText: {
+    color: '#ff9100',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  model3DSubtext: {
+    color: 'white',
+    fontSize: 12,
+    marginBottom: 2,
   },
   arControls: {
     flexDirection: 'row',
