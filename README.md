@@ -69,7 +69,7 @@ Epic Homes AR is a professional augmented reality application designed specifica
 - **Epic Homes Ready**: Production-ready for immediate deployment
 
 ### Future Enhancements
-- **3D Model Rendering**: Can be enhanced with expo-three or similar libraries
+- **3D Model Rendering**: Ready to implement with expo-gl + expo-three (libraries installed)
 - **Advanced AR Tracking**: Can add real plane detection with additional libraries
 - **Enhanced AR Libraries**: Can be upgraded to more advanced AR solutions when available
 - **Safety Guidelines**: Built-in safety protocols and best practices
@@ -217,6 +217,7 @@ Each phase includes detailed material lists, tool requirements, time estimates, 
 - **Framework**: Expo SDK 53
 - **Navigation**: Expo Router with React Navigation
 - **AR Technology**: Real camera AR with expo-camera
+- **3D Rendering**: expo-gl + expo-three + expo-gl-cpp (installed and ready)
 - **Asset Management**: Expo Asset API
 - **Storage**: In-memory storage for offline functionality
 - **3D Models**: GLB format with embedded textures
