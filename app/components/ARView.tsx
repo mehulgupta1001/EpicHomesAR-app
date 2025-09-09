@@ -2,6 +2,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ModelViewer } from './ModelViewer';
+import { ThreeDModelRenderer } from './ThreeDModelRenderer';
 
 interface ARViewProps {
   selectedHouse?: any;
@@ -17,6 +18,9 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
   const [housePlaced, setHousePlaced] = useState(false);
   const [arMode, setArMode] = useState<'scanning' | 'placing' | 'viewing'>('scanning');
   const [cameraReady, setCameraReady] = useState(false);
+  const [modelLoaded, setModelLoaded] = useState(false);
+  const [modelRotation, setModelRotation] = useState(0);
+  const [modelScale, setModelScale] = useState(1);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   const [permission, requestPermission] = useCameraPermissions();
@@ -56,12 +60,38 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
   const resetAR = () => {
     setHousePlaced(false);
     setArMode('scanning');
+    setModelLoaded(false);
+    setModelRotation(0);
+    setModelScale(1);
     fadeAnim.setValue(0);
     scaleAnim.setValue(0.5);
     
     setTimeout(() => {
       setArMode('placing');
     }, 2000);
+  };
+
+  const handleModelLoaded = (model: any) => {
+    setModelLoaded(true);
+    console.log('Epic Homes 3D model loaded in AR view:', model);
+  };
+
+  const handleRotateLeft = () => {
+    setModelRotation(prev => prev - 45);
+    onRotateLeft?.();
+  };
+
+  const handleRotateRight = () => {
+    setModelRotation(prev => prev + 45);
+    onRotateRight?.();
+  };
+
+  const handleScaleUp = () => {
+    setModelScale(prev => Math.min(prev + 0.2, 2));
+  };
+
+  const handleScaleDown = () => {
+    setModelScale(prev => Math.max(prev - 0.2, 0.5));
   };
 
   const getModelInfo = () => {
@@ -150,21 +180,40 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
                 <Text style={styles.modelTitle}>🏠 {modelInfo.name}</Text>
                 <Text style={styles.modelDescription}>{modelInfo.description}</Text>
                 
-                {/* Epic Homes 3D Model Display */}
-                <ModelViewer selectedHouse={selectedHouse} style={styles.modelViewer} />
+                {/* Epic Homes Real 3D Model Display */}
+                <ThreeDModelRenderer 
+                  selectedHouse={selectedHouse} 
+                  onModelLoaded={handleModelLoaded}
+                  style={styles.modelViewer} 
+                />
 
                 {/* AR Controls */}
                 <View style={styles.arControls}>
-                  <TouchableOpacity style={styles.controlButton} onPress={onRotateLeft}>
-                    <Text style={styles.controlText}>↻ Rotate</Text>
+                  <TouchableOpacity style={styles.controlButton} onPress={handleRotateLeft}>
+                    <Text style={styles.controlText}>↻ Rotate Left</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.controlButton}>
-                    <Text style={styles.controlText}>📏 Scale</Text>
+                  <TouchableOpacity style={styles.controlButton} onPress={handleRotateRight}>
+                    <Text style={styles.controlText}>↺ Rotate Right</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.controlButton}>
-                    <Text style={styles.controlText}>🎨 Materials</Text>
+                  <TouchableOpacity style={styles.controlButton} onPress={handleScaleUp}>
+                    <Text style={styles.controlText}>📏 Scale Up</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.controlButton} onPress={handleScaleDown}>
+                    <Text style={styles.controlText}>📏 Scale Down</Text>
                   </TouchableOpacity>
                 </View>
+
+                {/* Model Status */}
+                {modelLoaded && (
+                  <View style={styles.modelStatus}>
+                    <Text style={styles.statusText}>
+                      ✅ Epic Homes 3D Model Active
+                    </Text>
+                    <Text style={styles.statusSubtext}>
+                      Rotation: {modelRotation}° | Scale: {modelScale.toFixed(1)}x
+                    </Text>
+                  </View>
+                )}
 
                 {/* Construction Progress */}
                 <View style={styles.constructionSteps}>
@@ -349,6 +398,7 @@ const styles = StyleSheet.create({
   },
   arControls: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-around',
     width: '100%',
     marginBottom: 20,
@@ -362,6 +412,26 @@ const styles = StyleSheet.create({
   controlText: {
     color: 'white',
     fontSize: 12,
+  },
+  modelStatus: {
+    backgroundColor: 'rgba(0, 255, 0, 0.2)',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#00FF00',
+  },
+  statusText: {
+    color: '#00FF00',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  statusSubtext: {
+    color: 'white',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 2,
   },
   constructionSteps: {
     width: '100%',
