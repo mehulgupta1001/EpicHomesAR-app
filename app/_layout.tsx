@@ -18,16 +18,9 @@ export default function Layout() {
       }}
     >
       <Stack.Screen
-        name="index"
+        name="(tabs)"
         options={{
-          title: 'Epic Homes AR Visualizer',
-        }}
-      />
-      <Stack.Screen
-        name="ar"
-        options={{
-          title: 'AR View',
-          presentation: 'fullScreenModal',
+          headerShown: false,
         }}
       />
     </Stack>

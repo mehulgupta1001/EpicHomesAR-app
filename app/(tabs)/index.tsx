@@ -1,4 +1,6 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Link } from 'expo-router';
+import React from 'react';
+import { Button, Image, StyleSheet, View } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -6,13 +8,19 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const [lang, setLang] = React.useState('en');
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#ff821e', dark: '#ff821e' }}
       headerImage={
         <View style={styles.logoContainer}>
+          <View style={styles.languageBar}>
+            <Button title="EN" onPress={() => setLang('en')} disabled={lang === 'en'} />
+            <Button title="MS" onPress={() => setLang('ms')} disabled={lang === 'ms'} />
+          </View>
           <Image 
-            source={require('@/assets/images/Copy of EPIC_Homes-04 (White).png')} 
+            source={require('../../assets/images/Copy of EPIC_Homes-04 (White).png')} 
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -46,6 +54,13 @@ export default function HomeScreen() {
           Switch between languages to make the app accessible to diverse communities and volunteers.
         </ThemedText>
       </ThemedView>
+      <ThemedView style={styles.stepContainer}>
+        <Link href="/(tabs)/explore" style={styles.linkButton}>
+          <ThemedText style={styles.linkText}>
+            {lang === 'en' ? 'Start AR Experience' : 'Mulakan Pengalaman AR'}
+          </ThemedText>
+        </Link>
+      </ThemedView>
     </ParallaxScrollView>
   );
 }
@@ -69,5 +84,25 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 200,
     height: 80,
+  },
+  languageBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 16,
+    width: '100%',
+  },
+  linkButton: {
+    backgroundColor: '#ff821e',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginTop: 20,
+    alignSelf: 'center',
+  },
+  linkText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

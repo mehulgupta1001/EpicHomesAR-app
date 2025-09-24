@@ -5,11 +5,12 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "entryPoint": "index.js",
     "assetBundlePatterns": [
       "**/*"
     ],
     "jsEngine": "hermes",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "description": "An AR app for visualizing and constructing traditional Malaysian houses. UI in English; Bahasa Melayu support planned.",
     "ios": {
       "supportsTablet": true,
