@@ -31,7 +31,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 }
 expoAutolinking.useExpoModules()
 
-rootProject.name = 'EpicHomesAR'
+rootProject.name = 'Epic Homes AR'
 
 expoAutolinking.useExpoVersionCatalog()
 

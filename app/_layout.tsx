@@ -20,7 +20,7 @@ export default function Layout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Epic Homes AR',
+          title: 'Epic Homes AR Visualizer',
         }}
       />
       <Stack.Screen

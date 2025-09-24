@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Standalone3DViewer } from '../components/Standalone3DViewer';
 import { HOUSE_TYPES } from '../constants/houseTypes';
 

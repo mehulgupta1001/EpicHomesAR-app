@@ -7,9 +7,11 @@
       "@/*": ["app/*"]
     },
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node", "react-native"]
   },
   "include": [
     "**/*.ts",

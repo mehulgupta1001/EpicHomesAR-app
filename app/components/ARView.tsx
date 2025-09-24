@@ -1,7 +1,6 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { ModelViewer } from './ModelViewer';
 import { ThreeDModelRenderer } from './ThreeDModelRenderer';
 
 interface ARViewProps {

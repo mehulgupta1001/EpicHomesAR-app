@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { Asset } from 'expo-asset';
 import { GLView } from 'expo-gl';
 import { Renderer } from 'expo-three';
-import { Asset } from 'expo-asset';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
