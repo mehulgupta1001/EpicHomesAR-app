@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   startButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#ff9100',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
