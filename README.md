@@ -6,7 +6,11 @@ This repository branch contains the Pure React Native version of the Epic Homes 
 
 Add the images below to `screenshots/` and they will render here automatically:
 
+**Home Screen**
+
 ![Home Screen](screenshots/home.png)
+
+**AR Measurements (dimensions overlay)**
 
 ![AR Measurements](screenshots/ar-measurements.png)
 
