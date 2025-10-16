@@ -1,3 +1,17 @@
+## Epic Homes AR — Pure React Native
+
+This repository branch contains the Pure React Native version of the Epic Homes AR app. The Expo-based version remains on the `master` branch of the same repo (`EpicHomesAR-app`). See the repository here: [EpicHomesAR-app on GitHub](https://github.com/mehulgupta1001/EpicHomesAR-app/).
+
+### Screenshots
+
+Add the images below to `screenshots/` and they will render here automatically:
+
+![Home Screen](screenshots/home.png)
+
+![AR Measurements](screenshots/ar-measurements.png)
+
+---
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
