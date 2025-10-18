@@ -47,7 +47,7 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
             accessibilityRole="button"
           >
             <Image 
-              source={house.thumbnail ? house.thumbnail : require('../assets/images/epic-homes-logo-orange.png')}
+              source={house.thumbnail ? house.thumbnail : require('../assets/images/Copy of EPIC_Homes-03 (Normal).png')}
               style={styles.thumbnail}
               resizeMode="cover"
             />

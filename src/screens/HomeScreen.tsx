@@ -47,7 +47,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onHouseSelect, onNavigat
       <View style={styles.hero}>
         <View style={styles.overlay}>
           <Image 
-            source={require('../assets/images/Copy of EPIC_Homes-04 (White).png')} 
+            source={require('../assets/images/EPIC_Homes_White.png')} 
             style={styles.logo}
             resizeMode="contain"
           />
