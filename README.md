@@ -8,7 +8,7 @@ Add the images below to `screenshots/` and they will render here automatically:
 
 **Home Screen**
 
-![Home Screen](screenshots/home.png)
+![Home Screen](screenshots/IMG_4401.jpg)
 
 **AR Measurements (dimensions overlay)**
 
