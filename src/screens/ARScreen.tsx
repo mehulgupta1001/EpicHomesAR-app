@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     zIndex: 1000,
   },
@@ -636,6 +636,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 5,
   },
   iconButtonText: {
     color: 'white',

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { HouseType } from '../constants/houseTypes';
 
 interface ARViewProps {
@@ -11,27 +12,64 @@ interface ARViewProps {
   onMeasurementsUpdate?: (measurements: any) => void;
 }
 
-// Pure React Native AR Implementation
+// Pure React Native AR Implementation with Real Camera
 export default function ARView({ selectedHouse, onHousePlaced, onPlacementComplete, onRotateLeft, onRotateRight }: ARViewProps) {
   const [housePlaced, setHousePlaced] = useState(false);
   const [arMode, setArMode] = useState<'scanning' | 'placing' | 'viewing'>('scanning');
   const [modelLoaded, setModelLoaded] = useState(false);
   const [modelRotation, setModelRotation] = useState(0);
   const [modelScale, setModelScale] = useState(1);
+  const [hasPermission, setHasPermission] = useState(false);
+  const [surfaceDetected, setSurfaceDetected] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const camera = useRef<Camera>(null);
+  const devices = useCameraDevices();
+  const device = devices.find(d => d.position === 'back');
 
   useEffect(() => {
-    // Simulate surface detection without camera
-    setTimeout(() => {
-      setArMode('placing');
-    }, 2000);
+    // Request camera permission
+    const requestCameraPermission = async () => {
+      try {
+        console.log('Requesting camera permission...');
+        const permission = await Camera.requestCameraPermission();
+        console.log('Camera permission result:', permission);
+        if (permission === 'granted') {
+          console.log('Camera permission granted');
+          setHasPermission(true);
+          // Simulate surface detection after camera is ready
+          setTimeout(() => {
+            setSurfaceDetected(true);
+            setArMode('placing');
+          }, 3000);
+        } else {
+          console.log('Camera permission denied:', permission);
+          Alert.alert(
+            'Camera Permission Required',
+            'Please enable camera access to use AR features. Go to Settings > Apps > Epic Homes AR > Permissions and enable Camera.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'OK', onPress: () => requestCameraPermission() },
+            ]
+          );
+        }
+      } catch (error) {
+        console.error('Camera permission error:', error);
+        Alert.alert(
+          'Camera Error',
+          'Failed to access camera. Please check permissions in Settings.',
+          [{ text: 'OK' }]
+        );
+      }
+    };
+
+    requestCameraPermission();
   }, []);
 
   const handlePlaceHouse = () => {
     setHousePlaced(true);
     setArMode('viewing');
-    
+
     // Animate model appearance
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -59,7 +97,7 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
     setModelScale(1);
     fadeAnim.setValue(0);
     scaleAnim.setValue(0.5);
-    
+
     setTimeout(() => {
       setArMode('placing');
     }, 2000);
@@ -89,8 +127,10 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
   };
 
   const getModelInfo = () => {
-    if (!selectedHouse) return { name: 'Traditional House', description: 'Traditional Orang Asli house design' };
-    
+    if (!selectedHouse) {
+      return { name: 'Traditional House', description: 'Traditional Orang Asli house design' };
+    }
+
     return {
       name: selectedHouse.name,
       description: selectedHouse.description,
@@ -99,12 +139,38 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
 
   const modelInfo = getModelInfo();
 
+  // Show loading if no camera permission or device
+  if (!hasPermission || !device) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>
+            {!hasPermission ? 'Requesting camera permission...' : 'Loading camera...'}
+          </Text>
+          {!device && (
+            <Text style={styles.errorText}>
+              Camera device not found. Please check if your device has a camera.
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* AR Background */}
-      <View style={styles.camera}>
-        {/* AR Overlay */}
-        <View style={styles.overlay}>
+      {/* Real Camera Feed */}
+      <Camera
+        ref={camera}
+        style={styles.camera}
+        device={device}
+        isActive={true}
+        photo={false}
+        video={false}
+      />
+
+      {/* AR Overlay */}
+      <View style={styles.overlay}>
           {/* Scanning Interface */}
           {arMode === 'scanning' && (
             <View style={styles.scanningContainer}>
@@ -128,28 +194,35 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
             </View>
           )}
 
+          {/* Surface Detection Indicator */}
+          {surfaceDetected && (
+            <View style={styles.surfaceIndicator}>
+              <Text style={styles.surfaceText}>✓ Surface Ready</Text>
+            </View>
+          )}
+
           {/* 3D Model Display */}
           {housePlaced && arMode === 'viewing' && (
-            <Animated.View 
+            <Animated.View
               style={[
                 styles.modelDisplay,
                 {
                   opacity: fadeAnim,
-                  transform: [{ scale: scaleAnim }]
-                }
+                  transform: [{ scale: scaleAnim }],
+                },
               ]}
             >
               <View style={styles.modelContainer}>
                 <Text style={styles.modelTitle}>🏠 {modelInfo.name}</Text>
                 <Text style={styles.modelDescription}>{modelInfo.description}</Text>
-                
+
                 {/* Epic Homes 3D Model Display */}
                 <View style={styles.model3D}>
                   <Text style={styles.model3DText}>Epic Homes 3D Model</Text>
-                  <Text style={styles.model3DSubtext}>Model: {selectedHouse?.modelPath}</Text>
+                  <Text style={styles.model3DSubtext}>Model: {selectedHouse?.model}</Text>
                   <Text style={styles.model3DSubtext}>Dimensions: {selectedHouse?.dimensions.width}m x {selectedHouse?.dimensions.length}m</Text>
                   <Text style={styles.model3DSubtext}>Height: {selectedHouse?.dimensions.height}m</Text>
-                  
+
                   {/* Model Preview */}
                   <View style={styles.modelPreview}>
                     <Text style={styles.modelPreviewText}>🏠</Text>
@@ -205,7 +278,7 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
                   </View>
                 </View>
               </View>
-              
+
               <TouchableOpacity style={styles.resetButton} onPress={resetAR}>
                 <Text style={styles.resetButtonText}>Reset AR</Text>
               </TouchableOpacity>
@@ -213,7 +286,6 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
           )}
         </View>
       </View>
-    </View>
   );
 }
 
@@ -225,7 +297,23 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
-    backgroundColor: '#87CEEB', // Sky blue background
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 10,
   },
   overlay: {
     flex: 1,
@@ -420,6 +508,20 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   resetButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  surfaceIndicator: {
+    position: 'absolute',
+    top: 100,
+    left: 20,
+    backgroundColor: 'rgba(0,255,0,0.8)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  surfaceText: {
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',

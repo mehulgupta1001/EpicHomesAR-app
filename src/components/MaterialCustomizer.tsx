@@ -27,74 +27,14 @@ interface MaterialCategory {
 
 const MATERIAL_CATEGORIES: MaterialCategory[] = [
   {
-    id: 'wood',
-    name: 'Wood Type',
+    id: 'coming-soon',
+    name: 'Material Customization',
     options: [
       {
-        id: 'cengal',
-        name: 'Cengal',
+        id: 'coming-soon',
+        name: 'Coming Soon',
         thumbnail: ASSETS.thumbnails.default,
-        description: 'Premium hardwood, excellent durability',
-      },
-      {
-        id: 'meranti',
-        name: 'Meranti',
-        thumbnail: ASSETS.thumbnails.default,
-        description: 'Versatile hardwood, good strength',
-      },
-      {
-        id: 'bamboo',
-        name: 'Bamboo',
-        thumbnail: ASSETS.thumbnails.default,
-        description: 'Sustainable, fast-growing material',
-      },
-    ],
-  },
-  {
-    id: 'roofing',
-    name: 'Roofing',
-    options: [
-      {
-        id: 'nipah',
-        name: 'Nipah Palm',
-        thumbnail: ASSETS.thumbnails.default,
-        description: 'Traditional palm leaf roofing',
-      },
-      {
-        id: 'rumbia',
-        name: 'Rumbia',
-        thumbnail: ASSETS.thumbnails.default,
-        description: 'Durable palm thatch',
-      },
-      {
-        id: 'bamboo-shingle',
-        name: 'Bamboo Shingle',
-        thumbnail: ASSETS.thumbnails.default,
-        description: 'Modern sustainable option',
-      },
-    ],
-  },
-  {
-    id: 'binding',
-    name: 'Binding',
-    options: [
-      {
-        id: 'rattan',
-        name: 'Rattan',
-        thumbnail: ASSETS.thumbnails.default,
-        description: 'Traditional binding material',
-      },
-      {
-        id: 'natural-fiber',
-        name: 'Natural Fiber',
-        thumbnail: ASSETS.thumbnails.default,
-        description: 'Local plant-based rope',
-      },
-      {
-        id: 'modern-binding',
-        name: 'Modern Binding',
-        thumbnail: ASSETS.thumbnails.default,
-        description: 'Enhanced durability option',
+        description: 'Material customization will be available in future updates',
       },
     ],
   },
