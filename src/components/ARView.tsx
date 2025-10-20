@@ -16,9 +16,9 @@ interface ARViewProps {
 export default function ARView({ selectedHouse, onHousePlaced, onPlacementComplete, onRotateLeft, onRotateRight }: ARViewProps) {
   const [housePlaced, setHousePlaced] = useState(false);
   const [arMode, setArMode] = useState<'scanning' | 'placing' | 'viewing'>('scanning');
-  const [modelLoaded, setModelLoaded] = useState(false);
-  const [modelRotation, setModelRotation] = useState(0);
-  const [modelScale, setModelScale] = useState(1);
+  const [_modelLoaded, setModelLoaded] = useState(false);
+  const [_modelRotation, setModelRotation] = useState(0);
+  const [_modelScale, setModelScale] = useState(1);
   const [hasPermission, setHasPermission] = useState(false);
   const [surfaceDetected, setSurfaceDetected] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -213,24 +213,7 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
               ]}
             >
               <View style={styles.modelContainer}>
-                <Text style={styles.modelTitle}>🏠 {modelInfo.name}</Text>
-                <Text style={styles.modelDescription}>{modelInfo.description}</Text>
-
-                {/* Epic Homes 3D Model Display */}
-                <View style={styles.model3D}>
-                  <Text style={styles.model3DText}>Epic Homes 3D Model</Text>
-                  <Text style={styles.model3DSubtext}>Model: {selectedHouse?.model}</Text>
-                  <Text style={styles.model3DSubtext}>Dimensions: {selectedHouse?.dimensions.width}m x {selectedHouse?.dimensions.length}m</Text>
-                  <Text style={styles.model3DSubtext}>Height: {selectedHouse?.dimensions.height}m</Text>
-
-                  {/* Model Preview */}
-                  <View style={styles.modelPreview}>
-                    <Text style={styles.modelPreviewText}>🏠</Text>
-                    <Text style={styles.modelPreviewLabel}>3D Model Active</Text>
-                  </View>
-                </View>
-
-                {/* AR Controls */}
+                {/* AR Controls - Only show when house is actually rendered */}
                 <View style={styles.arControls}>
                   <TouchableOpacity style={styles.controlButton} onPress={handleRotateLeft}>
                     <Text style={styles.controlText}>↻ Rotate Left</Text>
@@ -244,38 +227,6 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
                   <TouchableOpacity style={styles.controlButton} onPress={handleScaleDown}>
                     <Text style={styles.controlText}>📏 Scale Down</Text>
                   </TouchableOpacity>
-                </View>
-
-                {/* Model Status */}
-                {modelLoaded && (
-                  <View style={styles.modelStatus}>
-                    <Text style={styles.statusText}>
-                      ✅ Epic Homes 3D Model Active
-                    </Text>
-                    <Text style={styles.statusSubtext}>
-                      Rotation: {modelRotation}° | Scale: {modelScale.toFixed(1)}x
-                    </Text>
-                  </View>
-                )}
-
-                {/* Construction Progress */}
-                <View style={styles.constructionSteps}>
-                  <Text style={styles.stepsTitle}>Construction Progress:</Text>
-                  <View style={styles.stepItem}>
-                    <Text style={styles.stepText}>✓ Foundation Complete</Text>
-                  </View>
-                  <View style={styles.stepItem}>
-                    <Text style={styles.stepText}>✓ Walls Complete</Text>
-                  </View>
-                  <View style={styles.stepItem}>
-                    <Text style={styles.stepText}>🔄 Roof (In Progress)</Text>
-                  </View>
-                  <View style={styles.stepItem}>
-                    <Text style={styles.stepText}>⏳ Interior</Text>
-                  </View>
-                  <View style={styles.stepItem}>
-                    <Text style={styles.stepText}>⏳ Finishing</Text>
-                  </View>
                 </View>
               </View>
 
@@ -294,9 +245,16 @@ const { height: screenHeight } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'black',
   },
   camera: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   loadingContainer: {
     flex: 1,
@@ -316,7 +274,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   overlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'transparent',
   },
   scanningContainer: {
@@ -386,13 +348,13 @@ const styles = StyleSheet.create({
   },
   modelDisplay: {
     position: 'absolute',
-    bottom: 50,
+    bottom: 20,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    borderRadius: 20,
-    padding: 20,
-    maxHeight: screenHeight * 0.6,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderRadius: 10,
+    padding: 10,
+    maxHeight: screenHeight * 0.15,
   },
   modelContainer: {
     alignItems: 'center',
@@ -411,94 +373,39 @@ const styles = StyleSheet.create({
   },
   model3D: {
     backgroundColor: 'rgba(255,130,30,0.2)',
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 20,
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#ff821e',
   },
   model3DText: {
     color: '#ff821e',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 3,
   },
   model3DSubtext: {
     color: 'white',
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  modelPreview: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  modelPreviewText: {
-    fontSize: 24,
-    marginBottom: 5,
-  },
-  modelPreviewLabel: {
-    color: '#ff821e',
     fontSize: 10,
-    fontWeight: 'bold',
+    marginBottom: 2,
   },
   arControls: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   controlButton: {
     backgroundColor: '#333333',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
   controlText: {
     color: 'white',
-    fontSize: 12,
-  },
-  modelStatus: {
-    backgroundColor: 'rgba(0, 255, 0, 0.2)',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#00FF00',
-  },
-  statusText: {
-    color: '#00FF00',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  statusSubtext: {
-    color: 'white',
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  constructionSteps: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  stepsTitle: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  stepItem: {
-    paddingVertical: 5,
-  },
-  stepText: {
-    color: '#CCCCCC',
-    fontSize: 14,
+    fontSize: 10,
   },
   resetButton: {
     backgroundColor: '#FF3B30',

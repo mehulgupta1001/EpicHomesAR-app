@@ -11,9 +11,10 @@ import {
 import { HOUSE_TYPES, HouseType } from '../constants/houseTypes';
 import { COLORS } from '../constants/values';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.8;
-const CARD_MARGIN = 10;
+const { width, height } = Dimensions.get('window');
+const isLandscape = width > height;
+const CARD_WIDTH = isLandscape ? width * 0.35 : width * 0.7;
+const CARD_MARGIN = 8;
 
 interface HouseSelectorProps {
   onSelect: (house: HouseType) => void;
@@ -53,22 +54,9 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
             />
             <View style={styles.textContainer}>
               <Text style={styles.houseName}>{house.name}</Text>
-              <Text style={styles.description}>{house.description}</Text>
-              <View style={styles.specs}>
-                <Text style={styles.specText}>
-                  Size: {house.dimensions.width}m × {house.dimensions.length}m
-                </Text>
-                <Text style={styles.specText}>
-                  Height: {house.dimensions.height}m
-                </Text>
-              </View>
-              <View style={styles.materials}>
-                {house.materials.map((material, index) => (
-                  <Text key={index} style={styles.materialText}>
-                    • {material}
-                  </Text>
-                ))}
-              </View>
+              <Text style={styles.dimensions}>
+                {house.dimensions.width}m × {house.dimensions.length}m × {house.dimensions.height}m
+              </Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -80,18 +68,19 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.BACKGROUND,
-    padding: 16,
-    borderRadius: 12,
+    padding: isLandscape ? 12 : 16,
+    borderRadius: 10,
     position: 'absolute',
+    top: isLandscape ? 80 : 100,
     bottom: 20,
     left: 0,
     right: 0,
   },
   title: {
-    fontSize: 20,
+    fontSize: isLandscape ? 16 : 18,
     fontWeight: 'bold',
     color: COLORS.WHITE,
-    marginBottom: 16,
+    marginBottom: isLandscape ? 8 : 12,
     textAlign: 'center',
   },
   scrollContent: {
@@ -100,7 +89,7 @@ const styles = StyleSheet.create({
   houseCard: {
     width: CARD_WIDTH,
     backgroundColor: COLORS.CARD_BG,
-    borderRadius: 12,
+    borderRadius: 8,
     marginHorizontal: CARD_MARGIN,
     overflow: 'hidden',
     borderWidth: 2,
@@ -111,37 +100,21 @@ const styles = StyleSheet.create({
   },
   thumbnail: {
     width: '100%',
-    height: 200,
+    height: isLandscape ? 120 : 150,
     backgroundColor: COLORS.BACKGROUND,
   },
   textContainer: {
-    padding: 16,
+    padding: isLandscape ? 8 : 12,
   },
   houseName: {
-    fontSize: 18,
+    fontSize: isLandscape ? 16 : 18,
     fontWeight: 'bold',
     color: COLORS.WHITE,
-    marginBottom: 8,
+    marginBottom: isLandscape ? 6 : 8,
   },
-  description: {
-    fontSize: 14,
-    color: COLORS.SECONDARY,
-    marginBottom: 12,
-  },
-  specs: {
-    marginBottom: 12,
-  },
-  specText: {
-    fontSize: 13,
+  dimensions: {
+    fontSize: isLandscape ? 12 : 14,
     color: COLORS.SECONDARY,
     marginBottom: 4,
-  },
-  materials: {
-    marginTop: 8,
-  },
-  materialText: {
-    fontSize: 13,
-    color: COLORS.SECONDARY,
-    marginBottom: 2,
   },
 });

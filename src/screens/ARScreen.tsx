@@ -546,20 +546,6 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
         </TouchableOpacity>
       </View>
 
-      {/* Rotation Controls */}
-      {showRotationControls && !isPlacingHouse && (
-        <View style={styles.rotationControls}>
-          <TouchableOpacity style={styles.rotateButton} onPress={handleRotateLeft}>
-            <Text style={styles.rotateButtonText}>↻</Text>
-          </TouchableOpacity>
-          <View style={styles.rotationDisplay}>
-            <Text style={styles.rotationText}>{rotation}°</Text>
-          </View>
-          <TouchableOpacity style={styles.rotateButton} onPress={handleRotateRight}>
-            <Text style={styles.rotateButtonText}>↺</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {/* Measurements Overlay */}
       {showMeasurements && !isPlacingHouse && measurements && (
@@ -594,21 +580,13 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
 
       {/* House Selector */}
       {showHouseSelector && (
-        <View style={styles.houseSelectorOverlay}>
-          <HouseSelector
-            onSelect={(house) => {
-              setSelectedHouseType(house);
-              setShowHouseSelector(false);
-            }}
-            selectedHouseId={selectedHouseType.id}
-          />
-          <TouchableOpacity
-            style={styles.closeHouseSelectorButton}
-            onPress={() => setShowHouseSelector(false)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
+        <HouseSelector
+          onSelect={(house) => {
+            setSelectedHouseType(house);
+            setShowHouseSelector(false);
+          }}
+          selectedHouseId={selectedHouseType.id}
+        />
       )}
     </View>
   );
@@ -621,7 +599,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     position: 'absolute',
-    top: 50,
+    top: 12,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -641,40 +619,6 @@ const styles = StyleSheet.create({
   iconButtonText: {
     color: 'white',
     fontSize: 20,
-  },
-  rotationControls: {
-    position: 'absolute',
-    bottom: 100,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  rotateButton: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 25,
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 20,
-  },
-  rotateButtonText: {
-    color: 'white',
-    fontSize: 24,
-  },
-  rotationDisplay: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-  },
-  rotationText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   measurementsOverlay: {
     position: 'absolute',
@@ -838,17 +782,5 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.9)',
     zIndex: 1000,
-  },
-  closeHouseSelectorButton: {
-    backgroundColor: '#ff821e',
-    borderRadius: 10,
-    padding: 15,
-    margin: 20,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
