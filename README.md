@@ -1,20 +1,60 @@
-## Epic Homes AR — Pure React Native
+# Epic Homes AR — Visual Housing Prototype (React Native)
 
-This repository branch contains the Pure React Native version of the Epic Homes AR app. The Expo-based version remains on the `master` branch of the same repo (`EpicHomesAR-app`). See the repository here: [EpicHomesAR-app on GitHub](https://github.com/mehulgupta1001/EpicHomesAR-app/).
+**One-line purpose:**  
+Epic Homes AR lets indigenous families preview and compare house layouts in augmented reality before construction, reducing costly miscommunication and helping families make informed design choices.
 
-### Screenshots
+**Quick progress snapshot:**  
+`61 commits • UI complete • AR core (react-native-ar-viewer) in active development • Prototype shown to Epic Homes (demo next step)`
 
-Add the images below to `screenshots/` and they will render here automatically:
+---
 
-**Home Screen**
-
+### Preview
 ![Home Screen](screenshots/IMG_4401.jpg)
 
-**AR Measurements (dimensions overlay)**
+<details>
+<summary>Short demo (click to expand)</summary>
 
 ![AR Measurements](screenshots/ar-measurements.png)
 
+</details>
+
 ---
+
+### What this project does (30 seconds)
+- **Problem:** Low-cost house builds often proceed from plans that families struggle to visualise, causing expensive rework and mismatched expectations.  
+- **Solution:** A bilingual (English/Malay) mobile app that overlays 3D house models in the real space so families can assess scale, flow, and material choices.  
+- **Impact:** Designed for non-technical users; field demo with Epic Homes is scheduled to evaluate deployment.
+
+---
+
+### Key features
+- Bilingual UI (English / Malay) and simplified onboarding for first-time mobile users  
+- Real-time camera AR with house model placement and interaction
+- Multiple traditional Malaysian house designs (4 Module houses in different colors)
+- Simple scene navigation and object controls (rotation, scaling, material customization)
+- Construction progress tracking with step-by-step building guides
+- Material customization options (traditional materials like Cengal hardwood, Meranti, Bamboo)
+- Offline compatibility for field use without internet connection
+
+---
+
+### Technical appendix (for engineers)
+- **Tech:** React Native (Pure RN branch), react-native-ar-viewer (AR module), TypeScript.  
+- **Main challenge:** implementing persistent anchors and lightweight occlusion for low-end Android devices; resolving Expo ↔ native module conflicts required switching branches.  
+- **Status:** UI complete and testable; AR anchoring in development (see `docs/AR-notes.md`).
+
+---
+
+### How to view / demo (non-technical)
+1. Open `screenshots/IMG_4401.jpg` for a preview of the home screen UI.  
+2. For a live test, request an APK (contact below).  
+3. For technical reviewers: run `npm install && npm run android` after following RN environment setup (see Developer notes).
+
+---
+
+## Developer notes (detailed)
+
+This repository branch contains the Pure React Native version of the Epic Homes AR app. The Expo-based version remains on the `master` branch of the same repo (`EpicHomesAR-app`). See the repository here: [EpicHomesAR-app on GitHub](https://github.com/mehulgupta1001/EpicHomesAR-app/).
 
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
@@ -95,3 +135,8 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+---
+
+### Contact / verification
+Mehul Gupta — mehulgup1001@gmail.com
