@@ -4,7 +4,7 @@
 Epic Homes AR lets indigenous families preview and compare house layouts in augmented reality before construction, reducing costly miscommunication and helping families make informed design choices.
 
 **Quick progress snapshot:**  
-`61 commits • UI complete • AR core (react-native-ar-viewer) in active development • Prototype shown to Epic Homes (demo next step)`
+`UI complete • AR core (react-native-ar-viewer) in active development • Prototype shown to Epic Homes (demo next step)`
 
 ---
 
