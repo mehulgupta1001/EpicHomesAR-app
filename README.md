@@ -1,58 +1,49 @@
 # Epic Homes AR — Visual Housing Prototype (React Native)
 
-**One-line purpose:**  
-Epic Homes AR lets indigenous families preview and compare house layouts in augmented reality before construction, reducing costly miscommunication and helping families make informed design choices.
+**One-line purpose**  
+Epic Homes AR helps indigenous families preview and compare house layouts in augmented reality before construction, reducing costly rework and helping families choose materials and layouts with confidence.
 
-**Quick progress snapshot:**  
-`UI complete • AR core (react-native-ar-viewer) in active development • Prototype shown to Epic Homes (demo next step)`
+**Progress snapshot**  
+Active development since June — UI complete; AR core in active development. [View commit history](https://github.com/mehulgupta1001/EpicHomesAR-app/commits/pure-react-native)
 
 ---
 
-### Preview
-![Home Screen](screenshots/IMG_4401.jpg)
+### Quick preview
+![UI preview — main screen and layout toggle](screenshots/UI_preview.png)
+
+<figcaption>UI preview: bilingual onboarding → layout toggle → measurement overlay.</figcaption>
 
 <details>
-<summary>Short demo (click to expand)</summary>
+<summary><strong>Short demo (click to expand)</strong></summary>
 
-![AR Measurements](screenshots/ar-measurements.png)
+![Demo GIF — quick app walkthrough](screenshots/demo.gif)
 
 </details>
 
 ---
 
 ### What this project does (30 seconds)
-- **Problem:** Low-cost house builds often proceed from plans that families struggle to visualise, causing expensive rework and mismatched expectations.  
-- **Solution:** A bilingual (English/Malay) mobile app that overlays 3D house models in the real space so families can assess scale, flow, and material choices.  
-- **Impact:** Designed for non-technical users; field demo with Epic Homes is scheduled to evaluate deployment.
+- **Problem:** Families often struggle to visualise architectural plans, leading to mismatched expectations and rework.  
+- **Solution:** A bilingual (English/Malay) mobile app that overlays 3D house models into real space so families can assess scale, flow, and materials.  
+- **Impact:** Designed for non-technical users; Epic Homes is evaluating the prototype and a demo is scheduled to assess field deployment.
 
 ---
 
 ### Key features
-- Bilingual UI (English / Malay) and simplified onboarding for first-time mobile users  
-- Real-time camera AR with house model placement and interaction
-- Multiple traditional Malaysian house designs (4 Module houses in different colors)
-- Simple scene navigation and object controls (rotation, scaling, material customization)
-- Construction progress tracking with step-by-step building guides
-- Material customization options (traditional materials like Cengal hardwood, Meranti, Bamboo)
-- Offline compatibility for field use without internet connection
+- Bilingual UI (English / Malay) with simplified onboarding for first-time mobile users  
+- Real-time AR placement, measurement overlays, and material toggles  
+- Multiple traditional house model variants and basic construction progress tracking  
+- Offline compatibility for field use without constant internet access
 
 ---
 
 ### Technical appendix (for engineers)
-- **Tech:** React Native (Pure RN branch), react-native-ar-viewer (AR module), TypeScript.  
+- **Tech:** React Native (Pure RN branch), react-native-ar-viewer (AR), TypeScript.  
 - **Main challenge:** implementing persistent anchors and lightweight occlusion for low-end Android devices; resolving Expo ↔ native module conflicts required switching branches.  
 - **Status:** UI complete and testable; AR anchoring in development (see `docs/AR-notes.md`).
 
----
-
-### How to view / demo (non-technical)
-1. Open `screenshots/IMG_4401.jpg` for a preview of the home screen UI.  
-2. For a live test, request an APK (contact below).  
-3. For technical reviewers: run `npm install && npm run android` after following RN environment setup (see Developer notes).
-
----
-
-## Developer notes (detailed)
+<details>
+<summary><strong>Developer notes — click to expand</strong></summary>
 
 This repository branch contains the Pure React Native version of the Epic Homes AR app. The Expo-based version remains on the `master` branch of the same repo (`EpicHomesAR-app`). See the repository here: [EpicHomesAR-app on GitHub](https://github.com/mehulgupta1001/EpicHomesAR-app/).
 
@@ -139,4 +130,5 @@ To learn more about React Native, take a look at the following resources:
 ---
 
 ### Contact / verification
-Mehul Gupta — mehulgup1001@gmail.com
+Mehul Gupta — mehulgup1001@gmail.com  
+Proof: public commit history (link above), UI screenshots in /screenshots, and Epic Homes email confirming prototype review available on request.
