@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View, Alert, Platform } from 'react-native';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { HouseType } from '../constants/houseTypes';
+import { ASSETS } from '../constants/assets';
+import { ModelLoader } from '../services/ModelLoader';
+import { ARControls } from '../services/ARControls';
+import { ARCapabilityDetector } from '../services/ARCapabilityDetector';
+import ModelViewer from './ModelViewer';
 
 interface ARViewProps {
   selectedHouse?: HouseType;
@@ -12,31 +17,96 @@ interface ARViewProps {
   onMeasurementsUpdate?: (measurements: any) => void;
 }
 
-// Pure React Native AR Implementation with Real Camera
+// Pure React Native AR Implementation with Real 3D Models
 export default function ARView({ selectedHouse, onHousePlaced, onPlacementComplete, onRotateLeft, onRotateRight }: ARViewProps) {
   const [housePlaced, setHousePlaced] = useState(false);
   const [arMode, setArMode] = useState<'scanning' | 'placing' | 'viewing'>('scanning');
-  const [_modelLoaded, setModelLoaded] = useState(false);
-  const [_modelRotation, setModelRotation] = useState(0);
-  const [_modelScale, setModelScale] = useState(1);
+  const [modelLoaded, setModelLoaded] = useState(false);
+  const [modelRotation, setModelRotation] = useState(0);
+  const [modelScale, setModelScale] = useState(1);
   const [hasPermission, setHasPermission] = useState(false);
   const [surfaceDetected, setSurfaceDetected] = useState(false);
+  const [arSupported, setArSupported] = useState(false);
+  const [fallbackMode, setFallbackMode] = useState(false);
+  const [modelPath, setModelPath] = useState<string>('');
+  const [modelLoading, setModelLoading] = useState(false);
+  const [modelError, setModelError] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   const camera = useRef<Camera>(null);
   const devices = useCameraDevices();
   const device = devices.find(d => d.position === 'back');
 
+  // AR Capability Detection
+  const checkARSupport = async (): Promise<boolean> => {
+    try {
+      const result = await ARCapabilityDetector.checkARSupport();
+      console.log('AR support check result:', result);
+      
+      if (!result.supported) {
+        console.log('AR not supported:', result.reason);
+        const recommendations = ARCapabilityDetector.getFallbackRecommendations(result);
+        console.log('Fallback recommendations:', recommendations);
+      }
+      
+      return result.supported;
+    } catch (error) {
+      console.error('AR support check failed:', error);
+      return false;
+    }
+  };
+
+  // Model Loading Service
+  const loadModel = async (modelPath: string) => {
+    setModelLoading(true);
+    setModelError(null);
+    try {
+      console.log('Loading model:', modelPath);
+      
+      // Use ModelLoader service
+      const result = await ModelLoader.loadModel(modelPath);
+      
+      if (result.success && result.modelPath) {
+        setModelPath(result.modelPath);
+        setModelLoaded(true);
+        console.log('Model loaded successfully');
+      } else {
+        throw new Error(result.error || 'Failed to load model');
+      }
+    } catch (error) {
+      console.error('Model loading failed:', error);
+      setModelError(error instanceof Error ? error.message : 'Failed to load model');
+    } finally {
+      setModelLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Request camera permission
-    const requestCameraPermission = async () => {
+    // Check AR support and request camera permission
+    const initializeAR = async () => {
       try {
+        // Check AR support
+        const supported = await checkARSupport();
+        setArSupported(supported);
+        
+        if (!supported) {
+          setFallbackMode(true);
+        }
+
+        // Request camera permission
         console.log('Requesting camera permission...');
         const permission = await Camera.requestCameraPermission();
         console.log('Camera permission result:', permission);
+        
         if (permission === 'granted') {
           console.log('Camera permission granted');
           setHasPermission(true);
+          
+          // Load the selected model
+          if (selectedHouse?.model) {
+            await loadModel(selectedHouse.model);
+          }
+          
           // Simulate surface detection after camera is ready
           setTimeout(() => {
             setSurfaceDetected(true);
@@ -49,22 +119,22 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
             'Please enable camera access to use AR features. Go to Settings > Apps > Epic Homes AR > Permissions and enable Camera.',
             [
               { text: 'Cancel', style: 'cancel' },
-              { text: 'OK', onPress: () => requestCameraPermission() },
+              { text: 'OK', onPress: () => initializeAR() },
             ]
           );
         }
       } catch (error) {
-        console.error('Camera permission error:', error);
+        console.error('AR initialization error:', error);
         Alert.alert(
-          'Camera Error',
-          'Failed to access camera. Please check permissions in Settings.',
+          'AR Error',
+          'Failed to initialize AR features. Please check permissions in Settings.',
           [{ text: 'OK' }]
         );
       }
     };
 
-    requestCameraPermission();
-  }, []);
+    initializeAR();
+  }, [selectedHouse]);
 
   const handlePlaceHouse = () => {
     setHousePlaced(true);
@@ -93,8 +163,12 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
     setHousePlaced(false);
     setArMode('scanning');
     setModelLoaded(false);
-    setModelRotation(0);
-    setModelScale(1);
+    
+    // Reset using ARControls service
+    const resetState = ARControls.reset();
+    setModelRotation(resetState.rotation);
+    setModelScale(resetState.scale);
+    
     fadeAnim.setValue(0);
     scaleAnim.setValue(0.5);
 
@@ -109,21 +183,25 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
   // };
 
   const handleRotateLeft = () => {
-    setModelRotation(prev => prev - 45);
+    const newRotation = ARControls.rotateLeft(modelRotation);
+    setModelRotation(newRotation);
     onRotateLeft?.();
   };
 
   const handleRotateRight = () => {
-    setModelRotation(prev => prev + 45);
+    const newRotation = ARControls.rotateRight(modelRotation);
+    setModelRotation(newRotation);
     onRotateRight?.();
   };
 
   const handleScaleUp = () => {
-    setModelScale(prev => Math.min(prev + 0.2, 2));
+    const newScale = ARControls.scaleUp(modelScale);
+    setModelScale(newScale);
   };
 
   const handleScaleDown = () => {
-    setModelScale(prev => Math.max(prev - 0.2, 0.5));
+    const newScale = ARControls.scaleDown(modelScale);
+    setModelScale(newScale);
   };
 
   const getModelInfo = () => {
@@ -213,6 +291,47 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
               ]}
             >
               <View style={styles.modelContainer}>
+                {/* Real 3D Model Viewer */}
+                {modelLoaded && modelPath && !fallbackMode ? (
+                  <View style={styles.model3DContainer}>
+                    <ModelViewer
+                      modelPath={modelPath}
+                      rotation={modelRotation}
+                      scale={modelScale}
+                      onLoadStart={() => console.log('Epic Homes 3D model loading started')}
+                      onLoadSuccess={() => console.log('Epic Homes 3D model loaded successfully')}
+                      onLoadError={(error) => console.error('Epic Homes 3D model loading error:', error)}
+                    />
+                  </View>
+                ) : fallbackMode ? (
+                  <View style={styles.fallbackContainer}>
+                    <Text style={styles.fallbackText}>
+                      AR not supported on this device
+                    </Text>
+                    <Text style={styles.fallbackSubtext}>
+                      Using 3D preview mode
+                    </Text>
+                    <View style={styles.fallbackModelContainer}>
+                      <ModelViewer
+                        modelPath={modelPath}
+                        rotation={modelRotation}
+                        scale={modelScale}
+                        onLoadStart={() => console.log('Fallback 3D model loading started')}
+                        onLoadSuccess={() => console.log('Fallback 3D model loaded successfully')}
+                        onLoadError={(error) => console.error('Fallback 3D model loading error:', error)}
+                      />
+                    </View>
+                  </View>
+                ) : modelLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <Text style={styles.loadingText}>Loading 3D model...</Text>
+                  </View>
+                ) : modelError ? (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{modelError}</Text>
+                  </View>
+                ) : null}
+
                 {/* AR Controls - Only show when house is actually rendered */}
                 <View style={styles.arControls}>
                   <TouchableOpacity style={styles.controlButton} onPress={handleRotateLeft}>
@@ -432,5 +551,76 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  model3DContainer: {
+    width: 200,
+    height: 150,
+    backgroundColor: 'rgba(255,130,30,0.1)',
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ff821e',
+  },
+  model3DViewer: {
+    flex: 1,
+    borderRadius: 10,
+  },
+  model3DPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,130,30,0.2)',
+    borderRadius: 10,
+    padding: 20,
+  },
+  model3DInfo: {
+    color: 'white',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  fallbackModelPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,193,7,0.2)',
+    borderRadius: 10,
+    padding: 20,
+  },
+  fallbackContainer: {
+    backgroundColor: 'rgba(255,193,7,0.2)',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ffc107',
+    alignItems: 'center',
+  },
+  fallbackText: {
+    color: '#ffc107',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  fallbackSubtext: {
+    color: 'white',
+    fontSize: 12,
+  },
+  fallbackModelContainer: {
+    width: 250,
+    height: 200,
+    backgroundColor: 'rgba(255,193,7,0.1)',
+    borderRadius: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#ffc107',
+  },
+  errorContainer: {
+    backgroundColor: 'rgba(220,53,69,0.2)',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#dc3545',
+    alignItems: 'center',
   },
 });
