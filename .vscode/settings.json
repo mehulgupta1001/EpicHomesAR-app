@@ -1,0 +1,52 @@
+{
+    "java.project.referencedLibraries":  [
+
+                                         ],
+    "java.import.gradle.enabled":  false,
+    "java.import.gradle.wrapper.enabled":  false,
+    "java.enabled":  false,
+    "java.server.launchMode":  "Standard",
+    "java.autobuild.enabled":  false,
+    "java.compile.nullAnalysis.mode":  "disabled",
+    "java.import.exclusions":  [
+                                   "**/node_modules/**",
+                                   "**/android/**",
+                                   "**/ios/**"
+                               ],
+    "search.exclude":  {
+                           "**/node_modules/react-native-screens/android":  true,
+                           "**/node_modules/@react-native-async-storage/async-storage/android":  true,
+                           "**/ios/build":  true,
+                           "**/node_modules/react-native-vector-icons/android":  true,
+                           "**/node_modules/@react-native/gradle-plugin":  true,
+                           "**/node_modules":  true,
+                           "**/android/app/build":  true,
+                           "**/node_modules/react-native-vision-camera/android":  true,
+                           "**/node_modules/**/android":  true,
+                           "**/node_modules/react-native-safe-area-context/android":  true,
+                           "**/android/build":  true
+                       },
+    "java.project.importOnFirstTimeStartup":  "disabled",
+    "java.configuration.runtimes":  [
+
+                                    ],
+    "files.exclude":  {
+                          "**/node_modules/react-native-screens/android":  true,
+                          "**/node_modules/@react-native-async-storage/async-storage/android":  true,
+                          "**/ios/build":  true,
+                          "**/node_modules/react-native-vector-icons/android":  true,
+                          "**/node_modules/@react-native/gradle-plugin":  true,
+                          "**/node_modules":  true,
+                          "**/android/app/build":  true,
+                          "**/node_modules/react-native-vision-camera/android":  true,
+                          "**/node_modules/**/android":  true,
+                          "**/node_modules/react-native-safe-area-context/android":  true,
+                          "**/android/build":  true
+                      },
+    "java.project.sourcePaths":  [
+
+                                 ],
+    "java.configuration.updateBuildConfiguration":  "disabled",
+    "java.project.outputPath":  "",
+    "java.maxConcurrentBuilds":  0
+}

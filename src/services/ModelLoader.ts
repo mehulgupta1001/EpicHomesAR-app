@@ -1,6 +1,8 @@
 // Model Loading Service for Epic Homes AR
 // Handles loading and management of 3D models
 
+import { Platform } from 'react-native';
+
 export interface ModelLoadResult {
   success: boolean;
   modelPath?: string;
@@ -9,55 +11,41 @@ export interface ModelLoadResult {
 
 export class ModelLoader {
   /**
-   * Load a 3D model from assets
-   * @param modelPath - Path to the model file
+   * Load a 3D model - Maps string paths to Android asset paths
+   * NOTE: GLB files must be manually copied to android/app/src/main/assets/models/houses/
+   * Metro bundler cannot bundle GLB files directly
+   * @param modelPath - String path to model (e.g., '../assets/models/houses/house.glb')
    * @returns Promise<ModelLoadResult>
    */
   static async loadModel(modelPath: string): Promise<ModelLoadResult> {
     try {
       console.log('Loading Epic Homes 3D model:', modelPath);
-      
+
       // Validate model path
       if (!modelPath || typeof modelPath !== 'string') {
         throw new Error('Invalid model path');
       }
+
+      // Extract file name
+      let fileName = modelPath.split('/').pop() || 'model.glb';
       
-      // Check if model path has valid extension
-      if (!modelPath.includes('.glb') && !modelPath.includes('.obj')) {
-        throw new Error('Unsupported model format. Only GLB and OBJ files are supported.');
-      }
+      // Clean up filename - handle spaces in names like "4 Module - Blue.glb"
+      fileName = fileName.trim();
+
+      // For Android: Models must be manually copied to android/app/src/main/assets/models/houses/
+      // WebView can access them via file:///android_asset/ prefix
+      // Format: file:///android_asset/models/houses/filename.glb
+      const androidAssetPath = `file:///android_asset/models/houses/${fileName}`;
+
+      console.log('Resolved Android asset path:', androidAssetPath);
       
-      // Convert relative path to Android/iOS asset path for WebView
-      // Assets in React Native are bundled and accessible via file:// protocol
-      let finalPath = modelPath;
-      
-      // Clean up the path - remove ../assets/ or ./assets/ prefix
-      let cleanPath = modelPath
-        .replace(/^\.\.\/assets\//, '')
-        .replace(/^\.\/assets\//, '')
-        .replace(/^assets\//, '');
-      
-      // For Android: assets are in android/app/src/main/assets/
-      // WebView can access via file:///android_asset/ prefix
-      // Note: Models must be copied to android/app/src/main/assets/ during build
-      if (cleanPath.includes('models/')) {
-        // Keep the models/ path structure
-        finalPath = `file:///android_asset/${cleanPath}`;
-      } else {
-        // Fallback: assume it's already a valid path
-        finalPath = modelPath.startsWith('file://') || modelPath.startsWith('http') 
-          ? modelPath 
-          : `file:///android_asset/models/houses/${cleanPath.split('/').pop()}`;
-      }
-      
-      console.log('Resolved Epic Homes 3D model path:', finalPath);
-      
-      // Return immediately - actual loading happens in WebView
+      // Return the Android asset path - WebView can directly load from there
+      // No need to copy files if they're already in assets folder
       return {
         success: true,
-        modelPath: finalPath
+        modelPath: androidAssetPath
       };
-      
+
     } catch (error) {
       console.error('Epic Homes 3D model loading failed:', error);
       return {

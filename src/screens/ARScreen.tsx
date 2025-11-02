@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import ARView from '../components/ARView';
+import RealARView from '../components/RealARView';
+import { ARErrorBoundary } from '../components/ARErrorBoundary';
 import { HouseSelector } from '../components/HouseSelector';
 import { InfoPanel } from '../components/InfoPanel';
 import { MaterialCustomizer } from '../components/MaterialCustomizer';
@@ -496,13 +497,20 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
 
   return (
     <View style={styles.container} ref={viewRef}>
-      <ARView
-        selectedHouse={selectedHouseType}
-        onPlacementComplete={handlePlacementComplete}
-        onRotateLeft={handleRotateLeft}
-        onRotateRight={handleRotateRight}
-        onMeasurementsUpdate={handleMeasurementsUpdate}
-      />
+      {/* REAL AR Implementation - Uses ARCore for actual surface detection and 3D rendering */}
+      <ARErrorBoundary>
+        <RealARView
+          selectedHouse={selectedHouseType}
+          onPlacementComplete={handlePlacementComplete}
+          onHousePlaced={() => {
+            console.log('Epic Homes house placed in AR!');
+          }}
+          onError={(error) => {
+            console.error('AR Error:', error);
+            Alert.alert('AR Error', `AR session failed: ${error}\n\nPlease ensure ARCore is installed.`);
+          }}
+        />
+      </ARErrorBoundary>
 
       {showTutorial && <Tutorial onComplete={handleTutorialComplete} />}
 
@@ -587,6 +595,33 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
           }}
           selectedHouseId={selectedHouseType.id}
         />
+      )}
+
+      {/* AR Controls - Rotation and Scale */}
+      {showRotationControls && !isPlacingHouse && (
+        <View style={styles.arControls}>
+          <TouchableOpacity 
+            style={styles.controlButton} 
+            onPress={handleRotateLeft}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.controlButtonText}>↶</Text>
+            <Text style={styles.controlLabel}>Rotate Left</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.controlCenter}>
+            <Text style={styles.controlValue}>{rotation}°</Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.controlButton} 
+            onPress={handleRotateRight}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.controlButtonText}>↷</Text>
+            <Text style={styles.controlLabel}>Rotate Right</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -756,6 +791,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 15,
+  },
+  arControls: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    zIndex: 1000,
+  },
+  controlButton: {
+    backgroundColor: 'rgba(255, 130, 30, 0.9)',
+    borderRadius: 30,
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  controlButtonText: {
+    color: 'white',
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  controlLabel: {
+    color: 'white',
+    fontSize: 10,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  controlCenter: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 25,
+    width: 100,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  controlValue: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   safetyNote: {
     color: '#ffcc00',

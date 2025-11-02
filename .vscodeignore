@@ -1,0 +1,13 @@
+﻿node_modules/@react-native-async-storage/async-storage/android/
+node_modules/@react-native/gradle-plugin/
+node_modules/react-native-safe-area-context/android/
+node_modules/react-native-screens/android/
+node_modules/react-native-vector-icons/android/
+node_modules/react-native-vision-camera/android/
+node_modules/**/android/
+android/build/
+android/app/build/
+ios/build/
+
+
+
