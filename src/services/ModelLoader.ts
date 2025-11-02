@@ -17,41 +17,45 @@ export class ModelLoader {
     try {
       console.log('Loading Epic Homes 3D model:', modelPath);
       
-      // Convert relative path to absolute path for WebView
-      // In React Native, we need to serve files from the bundle
-      let absolutePath = modelPath;
-      
-      // Handle different path formats
-      if (modelPath.startsWith('../assets/')) {
-        // Convert to bundle path
-        absolutePath = modelPath.replace('../assets/', 'file:///android_asset/');
-      } else if (modelPath.startsWith('./assets/')) {
-        absolutePath = modelPath.replace('./assets/', 'file:///android_asset/');
-      } else if (!modelPath.startsWith('file://') && !modelPath.startsWith('http')) {
-        // Assume it's a relative path
-        absolutePath = `file:///android_asset/${modelPath}`;
-      }
-      
-      console.log('Converted model path:', absolutePath);
-      
       // Validate model path
-      if (!absolutePath || typeof absolutePath !== 'string') {
+      if (!modelPath || typeof modelPath !== 'string') {
         throw new Error('Invalid model path');
       }
       
-      // Check if model path exists (basic validation)
-      if (!absolutePath.includes('.glb') && !absolutePath.includes('.obj')) {
+      // Check if model path has valid extension
+      if (!modelPath.includes('.glb') && !modelPath.includes('.obj')) {
         throw new Error('Unsupported model format. Only GLB and OBJ files are supported.');
       }
       
-      // Simulate loading delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Convert relative path to Android/iOS asset path for WebView
+      // Assets in React Native are bundled and accessible via file:// protocol
+      let finalPath = modelPath;
       
-      console.log('Epic Homes 3D model loaded successfully:', absolutePath);
+      // Clean up the path - remove ../assets/ or ./assets/ prefix
+      let cleanPath = modelPath
+        .replace(/^\.\.\/assets\//, '')
+        .replace(/^\.\/assets\//, '')
+        .replace(/^assets\//, '');
       
+      // For Android: assets are in android/app/src/main/assets/
+      // WebView can access via file:///android_asset/ prefix
+      // Note: Models must be copied to android/app/src/main/assets/ during build
+      if (cleanPath.includes('models/')) {
+        // Keep the models/ path structure
+        finalPath = `file:///android_asset/${cleanPath}`;
+      } else {
+        // Fallback: assume it's already a valid path
+        finalPath = modelPath.startsWith('file://') || modelPath.startsWith('http') 
+          ? modelPath 
+          : `file:///android_asset/models/houses/${cleanPath.split('/').pop()}`;
+      }
+      
+      console.log('Resolved Epic Homes 3D model path:', finalPath);
+      
+      // Return immediately - actual loading happens in WebView
       return {
         success: true,
-        modelPath: absolutePath
+        modelPath: finalPath
       };
       
     } catch (error) {

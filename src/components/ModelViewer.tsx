@@ -26,6 +26,8 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   // HTML content with Three.js for GLB model rendering
+  // Note: This uses CDN for Three.js - requires internet connection
+  // For offline support, Three.js should be bundled locally
   const htmlContent = `
     <!DOCTYPE html>
     <html>

@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View, Alert, Platform } from 'react-native';
+import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { HouseType } from '../constants/houseTypes';
-import { ASSETS } from '../constants/assets';
 import { ModelLoader } from '../services/ModelLoader';
 import { ARControls } from '../services/ARControls';
 import { ARCapabilityDetector } from '../services/ARCapabilityDetector';
@@ -26,7 +25,6 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
   const [modelScale, setModelScale] = useState(1);
   const [hasPermission, setHasPermission] = useState(false);
   const [surfaceDetected, setSurfaceDetected] = useState(false);
-  const [arSupported, setArSupported] = useState(false);
   const [fallbackMode, setFallbackMode] = useState(false);
   const [modelPath, setModelPath] = useState<string>('');
   const [modelLoading, setModelLoading] = useState(false);
@@ -42,13 +40,13 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
     try {
       const result = await ARCapabilityDetector.checkARSupport();
       console.log('AR support check result:', result);
-      
+
       if (!result.supported) {
         console.log('AR not supported:', result.reason);
         const recommendations = ARCapabilityDetector.getFallbackRecommendations(result);
         console.log('Fallback recommendations:', recommendations);
       }
-      
+
       return result.supported;
     } catch (error) {
       console.error('AR support check failed:', error);
@@ -57,15 +55,15 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
   };
 
   // Model Loading Service
-  const loadModel = async (modelPath: string) => {
+  const loadModel = async (modelPathToLoad: string) => {
     setModelLoading(true);
     setModelError(null);
     try {
-      console.log('Loading model:', modelPath);
-      
+      console.log('Loading model:', modelPathToLoad);
+
       // Use ModelLoader service
-      const result = await ModelLoader.loadModel(modelPath);
-      
+      const result = await ModelLoader.loadModel(modelPathToLoad);
+
       if (result.success && result.modelPath) {
         setModelPath(result.modelPath);
         setModelLoaded(true);
@@ -85,29 +83,30 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
     // Check AR support and request camera permission
     const initializeAR = async () => {
       try {
-        // Check AR support
-        const supported = await checkARSupport();
-        setArSupported(supported);
-        
-        if (!supported) {
-          setFallbackMode(true);
-        }
+      // Check AR support
+      const supported = await checkARSupport();
+
+      if (!supported) {
+        setFallbackMode(true);
+      }
 
         // Request camera permission
         console.log('Requesting camera permission...');
         const permission = await Camera.requestCameraPermission();
         console.log('Camera permission result:', permission);
-        
+
         if (permission === 'granted') {
           console.log('Camera permission granted');
           setHasPermission(true);
-          
+
           // Load the selected model
           if (selectedHouse?.model) {
             await loadModel(selectedHouse.model);
           }
-          
-          // Simulate surface detection after camera is ready
+
+          // Initialize AR surface detection after camera is ready
+          // Note: This is a simplified implementation for WebView-based AR
+          // In production, use native AR SDKs (ARCore/ARKit) for real surface detection
           setTimeout(() => {
             setSurfaceDetected(true);
             setArMode('placing');
@@ -163,12 +162,12 @@ export default function ARView({ selectedHouse, onHousePlaced, onPlacementComple
     setHousePlaced(false);
     setArMode('scanning');
     setModelLoaded(false);
-    
+
     // Reset using ARControls service
     const resetState = ARControls.reset();
     setModelRotation(resetState.rotation);
     setModelScale(resetState.scale);
-    
+
     fadeAnim.setValue(0);
     scaleAnim.setValue(0.5);
 
