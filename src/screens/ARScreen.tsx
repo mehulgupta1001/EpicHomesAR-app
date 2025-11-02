@@ -597,30 +597,15 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
         />
       )}
 
-      {/* AR Controls - Rotation and Scale */}
+      {/* AR Controls Info - Rotation/Scale are handled by touch gestures */}
       {showRotationControls && !isPlacingHouse && (
         <View style={styles.arControls}>
-          <TouchableOpacity 
-            style={styles.controlButton} 
-            onPress={handleRotateLeft}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.controlButtonText}>↶</Text>
-            <Text style={styles.controlLabel}>Rotate Left</Text>
-          </TouchableOpacity>
-          
-          <View style={styles.controlCenter}>
-            <Text style={styles.controlValue}>{rotation}°</Text>
+          <View style={styles.controlInfo}>
+            <Text style={styles.controlInfoText}>🎮 AR Controls:</Text>
+            <Text style={styles.controlInfoSubtext}>• Drag with one finger to rotate</Text>
+            <Text style={styles.controlInfoSubtext}>• Pinch to scale</Text>
+            <Text style={styles.controlInfoSubtext}>• Tap to place model</Text>
           </View>
-          
-          <TouchableOpacity 
-            style={styles.controlButton} 
-            onPress={handleRotateRight}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.controlButtonText}>↷</Text>
-            <Text style={styles.controlLabel}>Rotate Right</Text>
-          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -835,6 +820,24 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  controlInfo: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    borderRadius: 15,
+    padding: 15,
+    alignItems: 'center',
+  },
+  controlInfoText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  controlInfoSubtext: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 13,
+    marginTop: 4,
+    textAlign: 'center',
   },
   safetyNote: {
     color: '#ffcc00',

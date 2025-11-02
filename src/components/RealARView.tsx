@@ -358,7 +358,7 @@ export default function RealARView({
         lightEstimation={true}
         manageDepth={true}
         disableInstructions={false}
-        disableInstantPlacement={true}
+        disableInstantPlacement={false}
         style={styles.arView}
         onStarted={() => {
           console.log('Real AR: onStarted event received - SUCCESS!');
