@@ -613,9 +613,8 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
         <View style={styles.arControls}>
           <View style={styles.controlInfo}>
             <Text style={styles.controlInfoText}>🎮 AR Controls:</Text>
-            <Text style={styles.controlInfoSubtext}>• Two-finger twist to rotate</Text>
+            <Text style={styles.controlInfoSubtext}>• Swipe on model to rotate</Text>
             <Text style={styles.controlInfoSubtext}>• Pinch to scale</Text>
-            <Text style={styles.controlInfoSubtext}>• One-finger drag to move</Text>
             <Text style={styles.controlInfoSubtext}>• Tap to place model</Text>
           </View>
         </View>

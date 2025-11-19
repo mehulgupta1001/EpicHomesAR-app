@@ -3,6 +3,9 @@
 export const DIMENSIONS = {
   DEFAULT_HOUSE: { width: 6.1, length: 7.62, height: 4.57, platformHeight: 1.22 },
   TRADITIONAL_MALAY: { width: 8.0, length: 10.0, height: 5.0, platformHeight: 1.5 },
+  // TODO: Verify actual dimensions for Epic Homes 4 Module houses
+  // Current values are placeholders - please confirm with Epic Homes specifications
+  EPIC_HOMES_4_MODULE: { width: 6.1, length: 7.62, height: 4.57, platformHeight: 1.22 },
 };
 
 export const COLORS = {

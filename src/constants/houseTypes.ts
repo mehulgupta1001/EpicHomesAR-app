@@ -57,7 +57,7 @@ export const HOUSE_TYPES: HouseType[] = [
     description: 'A 4-module house design by Epic Homes with blue finish.',
     model: ASSETS.models.epicHomes4ModuleBlue,
     thumbnail: ASSETS.thumbnails.default,
-    dimensions: DIMENSIONS.DEFAULT_HOUSE, // You can adjust these dimensions
+    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE, // TODO: Verify actual dimensions
     materials: [
       'Concrete blocks',
       'Steel reinforcement',
@@ -72,7 +72,7 @@ export const HOUSE_TYPES: HouseType[] = [
     description: 'A 4-module house design by Epic Homes with green finish.',
     model: ASSETS.models.epicHomes4ModuleGreen,
     thumbnail: ASSETS.thumbnails.default,
-    dimensions: DIMENSIONS.DEFAULT_HOUSE, // You can adjust these dimensions
+    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE, // TODO: Verify actual dimensions
     materials: [
       'Concrete blocks',
       'Steel reinforcement',
@@ -87,7 +87,7 @@ export const HOUSE_TYPES: HouseType[] = [
     description: 'A 4-module house design by Epic Homes with brown finish.',
     model: ASSETS.models.epicHomes4ModuleBrown,
     thumbnail: ASSETS.thumbnails.default,
-    dimensions: DIMENSIONS.DEFAULT_HOUSE, // You can adjust these dimensions
+    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE, // TODO: Verify actual dimensions
     materials: [
       'Concrete blocks',
       'Steel reinforcement',

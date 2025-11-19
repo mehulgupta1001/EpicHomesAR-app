@@ -357,7 +357,7 @@ export default function RealARView({
         planeOrientation="horizontal"
         allowScale={true}
         allowRotate={true}
-        allowTranslate={true}
+        allowTranslate={false}
         lightEstimation={true}
         manageDepth={true}
         disableInstructions={false}
