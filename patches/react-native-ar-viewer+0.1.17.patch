@@ -1,0 +1,109 @@
+diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
+index 0000000..1111111 100644
+--- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
++++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
+@@ -567,7 +567,15 @@ class ArViewerView : FrameLayout, LifecycleObserver {
+           }
+           
+           // CRITICAL: Set initial scale to ensure model is visible and fits on screen
+-          // Models are often too large by default, especially larger houses
+-          // Set a smaller initial scale (0.3x = 30% of original size) to make model fit on screen
+-          // This ensures the model is visible and can be scaled up/down from there
+-          modelNode!!.localScale = Vector3(0.3f, 0.3f, 0.3f)
+-          Log.d("ARview scale", "Initial scale set to 0.3x for visibility")
++          // Models are often too large by default, especially larger houses
++          // 4 Module houses are particularly large, so they need smaller scale
++          // Check if this is a 4 Module house by checking the model path
++          val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true)
++          val initialScale = if (is4ModuleHouse) {
++            0.15f // 15% of original size for 4 Module houses (they're very large)
++          } else {
++            0.3f  // 30% of original size for other houses
++          }
++          modelNode!!.localScale = Vector3(initialScale, initialScale, initialScale)
++          Log.d("ARview scale", "Initial scale set to ${initialScale}x for ${if (is4ModuleHouse) "4 Module house" else "regular house"}")
+           
+           // CRITICAL: Select model AFTER setting renderable
+@@ -650,6 +658,12 @@ class ArViewerView : FrameLayout, LifecycleObserver {
+     modelNode!!.scaleController.isEnabled = scaleEnabled
+     modelNode!!.rotationController.isEnabled = rotateEnabled
+     // CRITICAL: Keep translationController enabled even if translation is disabled
++    // This allows it to intercept drag gestures for rotation when translation is disabled
++    // The CustomTranslationController will handle rotation logic internally
+     modelNode!!.translationController.isEnabled = translateEnabled || rotateEnabled
+     
++    // CRITICAL: Tell CustomTranslationController whether translation is actually enabled
++    // This allows it to distinguish between "enabled for rotation" vs "enabled for translation"
++    val customTranslationController = modelNode!!.translationController as? com.reactnativearviewer.CustomTranslationController
++    customTranslationController?.setTranslationEnabled(translateEnabled)
++    
++    // CRITICAL: Ensure model is selected for scale gestures to work
++    // ScaleController requires the model to be selected to receive pinch gestures
++    if (scaleEnabled && !modelNode!!.isSelected) {
++      Log.d("ARview scale", "Model not selected, selecting for scale gestures")
++      modelNode!!.select()
++    }
++    
+     Log.d("ARview transforms", "Applied transforms - scale: $scaleEnabled, rotate: $rotateEnabled, translate: $translateEnabled")
++    Log.d("ARview controllers", "scaleEnabled: ${modelNode!!.scaleController.isEnabled}, rotateEnabled: ${modelNode!!.rotationController.isEnabled}, translateEnabled: ${modelNode!!.translationController.isEnabled}")
++    Log.d("ARview selection", "Model selected: ${modelNode!!.isSelected}")
+   }
+ 
+diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTranslationController.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTranslationController.kt
+index 0000000..2222222 100644
+--- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTranslationController.kt
++++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTranslationController.kt
+@@ -1,5 +1,6 @@
+ package com.reactnativearviewer
+ 
++import android.util.Log
+ import com.google.android.filament.utils.Float3
+ import com.google.ar.core.*
+ import com.google.ar.sceneform.*
+@@ -63,6 +64,13 @@ class CustomTranslationController(transformableNode: BaseTransformableNode?,
+     return super.isTransforming() || desiredLocalRotation != null || desiredLocalPosition != null
+   }
+ 
++  // Store whether translation is actually enabled (from allowTransform prop)
++  private var translationActuallyEnabled = true
++  
++  fun setTranslationEnabled(enabled: Boolean) {
++    translationActuallyEnabled = enabled
++  }
++  
+   override fun canStartTransformation(gesture: DragGesture): Boolean {
+     // CRITICAL: Check if we should use drag for rotation instead of translation
+     val customNode = transformableNode as? com.reactnativearviewer.CustomTransformableNode
+     val rotationEnabled = customNode?.rotationController?.isEnabled ?: false
+     
+-    // Check if translation is actually enabled by checking the allowTransform prop
+-    // We need to check the actual state, not just isEnabled (which might be true for rotation)
+-    val translationActuallyEnabled = transformableNode.translationController.isEnabled && 
+-                                     customNode?.translationController?.isEnabled == true
+-    
+     // CRITICAL: If rotation is enabled and translation is not actually enabled, use drag for rotation
+     // This ensures single-finger swipe rotation works
+     // The transformation system will route drag gestures to this controller
+     if (rotationEnabled && !translationActuallyEnabled) {
+@@ -138,7 +146,6 @@ class CustomTranslationController(transformableNode: BaseTransformableNode?,
+     val customNode = transformableNode as? com.reactnativearviewer.CustomTransformableNode
+     val rotationEnabled = customNode?.rotationController?.isEnabled ?: false
+     
+-    // Check if translation is actually enabled (check actual state, not just isEnabled flag)
+-    // The isEnabled flag might be true even when translation is disabled (for rotation support)
+-    val translationActuallyEnabled = transformableNode.translationController.isEnabled
+-    
+     // CRITICAL: If rotation is enabled and translation is not actually enabled, use drag for rotation
+     // Single-finger swipe will rotate the model around Y-axis (vertical)
+     if (rotationEnabled && !translationActuallyEnabled) {
+@@ -150,7 +157,7 @@ class CustomTranslationController(transformableNode: BaseTransformableNode?,
+         // Calculate delta from last position
+         val deltaX = currentPosition.x - lastPosition.x
+         // Convert horizontal drag to rotation around Y-axis
+         // Negative deltaX rotates clockwise, positive rotates counter-clockwise
+-        val rotationSpeed = 0.005f // Adjust this to control rotation sensitivity (radians per pixel)
++        val rotationSpeed = 0.025f // Increased from 0.005f for faster rotation (radians per pixel)
+         val currentRotation = transformableNode.localRotation
+         val rotationDelta = Quaternion.axisAngle(Vector3(0f, 1f, 0f), -deltaX * rotationSpeed)
+         transformableNode.localRotation = Quaternion.multiply(currentRotation, rotationDelta)
+
