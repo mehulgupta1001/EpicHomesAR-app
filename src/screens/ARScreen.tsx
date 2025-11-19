@@ -355,6 +355,17 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
     );
   };
 
+  // Auto-dismiss AR Controls info after 5 seconds
+  useEffect(() => {
+    if (showRotationControls && !isPlacingHouse) {
+      const timer = setTimeout(() => {
+        setShowRotationControls(false);
+      }, 5000); // 5 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [showRotationControls, isPlacingHouse]);
+
   const handleMeasurementsUpdate = (newMeasurements: Measurements) => {
     setMeasurements(newMeasurements);
   };
@@ -602,8 +613,9 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
         <View style={styles.arControls}>
           <View style={styles.controlInfo}>
             <Text style={styles.controlInfoText}>🎮 AR Controls:</Text>
-            <Text style={styles.controlInfoSubtext}>• Drag with one finger to rotate</Text>
+            <Text style={styles.controlInfoSubtext}>• Two-finger twist to rotate</Text>
             <Text style={styles.controlInfoSubtext}>• Pinch to scale</Text>
+            <Text style={styles.controlInfoSubtext}>• One-finger drag to move</Text>
             <Text style={styles.controlInfoSubtext}>• Tap to place model</Text>
           </View>
         </View>
