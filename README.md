@@ -35,38 +35,13 @@ Epic Homes AR is a professional augmented reality application designed specifica
 - **AR House Placement** - Tap-to-place models in real-world space
 - **Smooth Animations** - Beautiful animations for model display
 - **Epic Homes Branding** - Professional orange theme (#ff821e)
-- **Construction Progress Tracking** - Real-time building step visualization
-- **Material Customization** - Traditional material options
 - **AR Controls** - Rotation, scaling, and material controls
-- **Step-by-step Construction Guides** - Detailed building process breakdown
-- **Material and Tool Lists** - Comprehensive requirements for each phase
-- **Time Estimates and Safety Guidelines** - Professional construction guidance
 - **Photo Documentation** - Capture and save progress photos
 - **Offline Compatibility** - All features work without internet connection
 - **Performance Monitoring** - Optimized AR experience
 - **Interactive Tutorial System** - User-friendly onboarding
 
-## 🏗️ Construction Management
-
-The app guides users through 8 major construction phases:
-
-1. **Site Preparation** - Ground clearing and foundation setup
-2. **Foundation Posts** - Main structural support installation
-3. **Platform Beams** - Foundation post connections
-4. **Floor Joists** - Floor support structure
-5. **Floor Installation** - Bamboo/wooden flooring
-6. **Wall Frame Construction** - Main wall structure
-7. **Roof Structure** - Traditional roof construction
-8. **Final Finishing** - Interior and exterior completion
-
 Each phase includes detailed material lists, tool requirements, time estimates, and safety guidelines.
-
-## 🎨 Material Customization
-
-- **Traditional Materials**: Cengal hardwood, Meranti, Bamboo options
-- **Roofing Selections**: Nipah palm, Rumbia, bamboo shingle materials
-- **Binding Options**: Rattan, natural fiber, and modern alternatives
-- **Live Preview**: See material changes instantly in AR view
 
 ## 🌍 Cultural Preservation
 
