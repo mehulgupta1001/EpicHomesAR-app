@@ -188,6 +188,7 @@ export default function RealARView({
   const handleARStarted = () => {
     console.log('Real AR: AR session started successfully');
     console.log('Real AR: Model path being used:', modelPath);
+    console.log('Real AR: Gesture props - allowRotate: true, allowScale: true, allowTranslate: true');
     setIsARReady(true);
     setArError(null);
     console.log('Real AR: isARReady set to TRUE - hiding loading overlay');
@@ -211,6 +212,8 @@ export default function RealARView({
 
   const handleModelPlaced = () => {
     console.log('Real AR: Model placed on detected surface');
+    console.log('Real AR: Model should now be selected and gestures enabled');
+    console.log('Real AR: Try two-finger rotation and pinch-to-scale gestures');
     // If AR started event didn't fire, mark as ready when model is placed
     setIsARReady(true);
     setArError(null);
@@ -391,9 +394,10 @@ export default function RealARView({
       )}
       
       {/* Show loading overlay only if AR not ready */}
+      {/* CRITICAL: Use pointerEvents="none" when hidden to ensure touches reach AR view */}
       {/* isARReady is set in both handleARStarted() and handleModelPlaced() */}
-      {!isARReady && !arError && (
-        <View style={styles.loadingOverlay}>
+      {!isARReady && !arError ? (
+        <View style={styles.loadingOverlay} pointerEvents="box-none">
           <ActivityIndicator size="large" color="#ff821e" />
           <Text style={styles.loadingText}>Initializing AR...</Text>
           <Text style={styles.loadingSubtext}>Move your device slowly to detect surfaces</Text>
@@ -403,7 +407,7 @@ export default function RealARView({
             </Text>
           )}
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
