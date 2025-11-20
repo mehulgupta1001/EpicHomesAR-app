@@ -14,14 +14,24 @@ index 0000000..1111111 100644
 +          // Models are often too large by default, especially larger houses
 +          // 4 Module houses are particularly large, so they need smaller scale
 +          // Check if this is a 4 Module house by checking the model path
-+          val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true)
++          // More robust check: look for "4 Module" in various formats
++          val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true) || 
++                               modelSrc.contains("4Module", ignoreCase = true) ||
++                               modelSrc.contains("4-Module", ignoreCase = true) ||
++                               (modelSrc.contains("Module") && modelSrc.contains("4"))
++          Log.d("ARview scale", "is4ModuleHouse check result: $is4ModuleHouse (checked for '4 Module', '4Module', '4-Module', or 'Module' + '4')")
 +          val initialScale = if (is4ModuleHouse) {
-+            0.002f // 0.2% of original size for 4 Module houses (reduced from 15% - they're extremely large)
++            0.5f // 50% of original size for 4 Module houses (increased from 20% for visibility)
 +          } else {
 +            0.3f  // 30% of original size for other houses
 +          }
++          Log.d("ARview scale", "About to set scale to: $initialScale")
 +          modelNode!!.localScale = Vector3(initialScale, initialScale, initialScale)
-+          Log.d("ARview scale", "Initial scale set to ${initialScale}x for ${if (is4ModuleHouse) "4 Module house" else "regular house"}")
++          val actualScale = modelNode!!.localScale
++          Log.d("ARview scale", "Scale SET - Initial: ${initialScale}x, Actual after setting: x=${actualScale.x}, y=${actualScale.y}, z=${actualScale.z} for ${if (is4ModuleHouse) "4 Module house" else "regular house"}")
++          
++          // CRITICAL: Tell CustomScaleController about the initial scale so it can enforce min/max limits in real-time
++          modelNode!!.scaleController.setInitialScale(initialScale)
            
            // CRITICAL: Select model AFTER setting renderable
 @@ -650,6 +658,12 @@ class ArViewerView : FrameLayout, LifecycleObserver {
@@ -102,8 +112,135 @@ index 0000000..2222222 100644
          // Convert horizontal drag to rotation around Y-axis
          // Negative deltaX rotates clockwise, positive rotates counter-clockwise
 -        val rotationSpeed = 0.005f // Adjust this to control rotation sensitivity (radians per pixel)
-+        val rotationSpeed = 0.025f // Increased from 0.005f for faster rotation (radians per pixel)
++                 val rotationSpeed = 0.025f // Increased from 0.005f for faster rotation (radians per pixel)
          val currentRotation = transformableNode.localRotation
          val rotationDelta = Quaternion.axisAngle(Vector3(0f, 1f, 0f), -deltaX * rotationSpeed)
          transformableNode.localRotation = Quaternion.multiply(currentRotation, rotationDelta)
+
+diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomScaleController.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomScaleController.kt
+index 0000000..3333333 100644
+--- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomScaleController.kt
++++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomScaleController.kt
+@@ -0,0 +1,97 @@
++package com.reactnativearviewer
++
++import android.util.Log
++import com.google.ar.sceneform.ux.BaseTransformableNode
++import com.google.ar.sceneform.ux.PinchGesture
++import com.google.ar.sceneform.ux.ScaleController
++import com.google.ar.sceneform.math.Vector3
++
++/**
++ * Custom ScaleController that preserves the initial scale and allows scaling from that base
++ * This prevents the scale from being reset to 1.0 when scaling gestures are used
++ * Also enforces min/max scale limits in real-time during gestures to prevent model flipping
++ */
++class CustomScaleController(
++  transformableNode: BaseTransformableNode?,
++  gestureRecognizer: com.google.ar.sceneform.ux.PinchGestureRecognizer
++) : ScaleController(transformableNode, gestureRecognizer) {
++  
++  // Store the initial scale that was set (e.g., 0.5 for 4 Module houses)
++  private var initialScale: Float? = null
++  
++  // Store the minimum scale limit to prevent flipping
++  private var minScaleLimit: Float? = null
++  
++  // Track if we've captured the initial scale
++  private var hasCapturedInitialScale = false
++  
++  /**
++   * Set the initial scale that should be preserved
++   * This should be called after the model's scale is set initially
++   */
++  fun setInitialScale(scale: Float) {
++    initialScale = scale
++    hasCapturedInitialScale = true
++    
++    // Calculate minimum scale limit: absolute minimum of 0.2 (20%) or 50% of initial, whichever is larger
++    val absoluteMinScale = 0.2f
++    val relativeMinScale = scale * 0.5f
++    minScaleLimit = Math.max(absoluteMinScale, relativeMinScale)
++    
++    Log.d("ARview scale", "CustomScaleController: Initial scale set to $scale, minScaleLimit=${minScaleLimit}")
++  }
++  
++  override fun onContinueTransformation(gesture: PinchGesture) {
++    // If we haven't captured the initial scale yet, try to capture it now
++    if (!hasCapturedInitialScale && transformableNode != null) {
++      val currentScale = transformableNode.localScale
++      if (currentScale.x > 0f && currentScale.x < 1f) {
++        // This looks like a custom initial scale (not 1.0)
++        initialScale = currentScale.x
++        hasCapturedInitialScale = true
++        
++        // Calculate minimum scale limit
++        val absoluteMinScale = 0.2f
++        val relativeMinScale = currentScale.x * 0.5f
++        minScaleLimit = Math.max(absoluteMinScale, relativeMinScale)
++        
++        Log.d("ARview scale", "CustomScaleController: Captured initial scale: ${initialScale}, minScaleLimit=${minScaleLimit}")
++      }
++    }
++    
++    // Call parent implementation to handle the pinch gesture
++    super.onContinueTransformation(gesture)
++    
++    // CRITICAL: Immediately clamp the scale to prevent going below minimum during gesture
++    // This prevents the model from flipping upside down while pinching
++    if (minScaleLimit != null && transformableNode != null) {
++      val currentScale = transformableNode.localScale
++      val maxScaleLimit = (initialScale ?: 1f) * 10f  // Allow up to 10x initial scale
++      
++      // Clamp scale in real-time to prevent going below minimum
++      if (currentScale.x < minScaleLimit!!) {
++        transformableNode.localScale = Vector3(minScaleLimit!!, minScaleLimit!!, minScaleLimit!!)
++        Log.d("ARview scale", "CustomScaleController: Scale clamped to minimum ${minScaleLimit} during gesture")
++      } else if (currentScale.x > maxScaleLimit) {
++        transformableNode.localScale = Vector3(maxScaleLimit, maxScaleLimit, maxScaleLimit)
++        Log.d("ARview scale", "CustomScaleController: Scale clamped to maximum ${maxScaleLimit} during gesture")
++      }
++    }
++  }
++  
++  override fun onEndTransformation(gesture: PinchGesture) {
++    super.onEndTransformation(gesture)
++    
++    // After scaling ends, ensure scale is within reasonable bounds
++    if (minScaleLimit != null && transformableNode != null) {
++      val currentScale = transformableNode.localScale
++      val maxScaleLimit = (initialScale ?: 1f) * 10f
++      
++      // Final clamp to ensure scale is within bounds
++      val clampedScale = Math.max(minScaleLimit!!, Math.min(maxScaleLimit, currentScale.x))
++      if (Math.abs(currentScale.x - clampedScale) > 0.001f) {
++        transformableNode.localScale = Vector3(clampedScale, clampedScale, clampedScale)
++        Log.d("ARview scale", "CustomScaleController: Scale clamped to ${clampedScale} after gesture end")
++      }
++    }
++  }
++}
++
++diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTransformableNode.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTransformableNode.kt
++index 0000000..4444444 100644
++--- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTransformableNode.kt
+++++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTransformableNode.kt
++@@ -10,7 +10,7 @@ class CustomTransformableNode(transformationSystem: TransformationSystem) :
++   val translationController: TranslationController
++
++   /** Returns the controller that scales this node using a pinch gesture.  */
++-  val scaleController: ScaleController
+++  val scaleController: CustomScaleController
++
++   /** Returns the controller that rotates this node using a twist gesture.  */
++   val rotationController: RotationController
++@@ -18,7 +18,7 @@ class CustomTransformableNode(transformationSystem: TransformationSystem) :
++   init {
++     translationController = CustomTranslationController(this, transformationSystem.dragRecognizer)
++     addTransformationController(translationController)
++-    scaleController = ScaleController(this, transformationSystem.pinchRecognizer)
+++    scaleController = CustomScaleController(this, transformationSystem.pinchRecognizer)
++     addTransformationController(scaleController)
++     rotationController = RotationController(this, transformationSystem.twistRecognizer)
++     addTransformationController(rotationController)
 
