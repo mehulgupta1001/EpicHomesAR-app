@@ -16,7 +16,7 @@ index 0000000..1111111 100644
 +          // Check if this is a 4 Module house by checking the model path
 +          val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true)
 +          val initialScale = if (is4ModuleHouse) {
-+            0.15f // 15% of original size for 4 Module houses (they're very large)
++            0.002f // 0.2% of original size for 4 Module houses (reduced from 15% - they're extremely large)
 +          } else {
 +            0.3f  // 30% of original size for other houses
 +          }
