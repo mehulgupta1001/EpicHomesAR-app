@@ -13,8 +13,9 @@ import { COLORS } from '../constants/values';
 
 const { width, height } = Dimensions.get('window');
 const isLandscape = width > height;
-const CARD_WIDTH = isLandscape ? width * 0.35 : width * 0.7;
-const CARD_MARGIN = 8;
+// Adjust card width for better scrolling with many models
+const CARD_WIDTH = isLandscape ? width * 0.3 : width * 0.65;
+const CARD_MARGIN = 12;
 
 interface HouseSelectorProps {
   onSelect: (house: HouseType) => void;
@@ -30,10 +31,14 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
       <Text style={styles.title}>Select House Design</Text>
       <ScrollView
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={true}
         contentContainerStyle={styles.scrollContent}
         snapToInterval={CARD_WIDTH + CARD_MARGIN * 2}
         decelerationRate="fast"
+        pagingEnabled={false}
+        snapToAlignment="start"
+        scrollEventThrottle={16}
+        style={styles.scrollView}
       >
         {HOUSE_TYPES.map((house) => (
           <TouchableOpacity
@@ -53,7 +58,7 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
               resizeMode="cover"
             />
             <View style={styles.textContainer}>
-              <Text style={styles.houseName}>{house.name}</Text>
+              <Text style={styles.houseName} numberOfLines={2}>{house.name}</Text>
               <Text style={styles.dimensions}>
                 {house.dimensions.width}m × {house.dimensions.length}m × {house.dimensions.height}m
               </Text>
@@ -72,9 +77,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     position: 'absolute',
     top: isLandscape ? 80 : 100,
-    bottom: 20,
     left: 0,
     right: 0,
+    height: isLandscape ? 240 : 280,
   },
   title: {
     fontSize: isLandscape ? 16 : 18,
@@ -83,38 +88,47 @@ const styles = StyleSheet.create({
     marginBottom: isLandscape ? 8 : 12,
     textAlign: 'center',
   },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
     paddingHorizontal: CARD_MARGIN,
+    paddingVertical: 4,
+    alignItems: 'flex-start',
   },
   houseCard: {
     width: CARD_WIDTH,
     backgroundColor: COLORS.CARD_BG,
     borderRadius: 8,
     marginHorizontal: CARD_MARGIN,
-    overflow: 'hidden',
+    overflow: 'visible',
     borderWidth: 2,
     borderColor: 'transparent',
+    minHeight: isLandscape ? 200 : 240,
   },
   selectedCard: {
     borderColor: COLORS.CARD_BORDER,
   },
   thumbnail: {
     width: '100%',
-    height: isLandscape ? 120 : 150,
+    height: isLandscape ? 100 : 120,
     backgroundColor: COLORS.BACKGROUND,
   },
   textContainer: {
-    padding: isLandscape ? 8 : 12,
+    padding: isLandscape ? 8 : 10,
+    minHeight: isLandscape ? 80 : 100,
+    justifyContent: 'flex-start',
+    paddingBottom: isLandscape ? 12 : 14,
   },
   houseName: {
-    fontSize: isLandscape ? 16 : 18,
+    fontSize: isLandscape ? 14 : 16,
     fontWeight: 'bold',
     color: COLORS.WHITE,
-    marginBottom: isLandscape ? 6 : 8,
+    marginBottom: isLandscape ? 4 : 6,
   },
   dimensions: {
-    fontSize: isLandscape ? 12 : 14,
+    fontSize: isLandscape ? 11 : 12,
     color: COLORS.SECONDARY,
-    marginBottom: 4,
+    marginBottom: 2,
   },
 });

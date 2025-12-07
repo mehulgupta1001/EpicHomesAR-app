@@ -50,6 +50,98 @@ export const HOUSE_TYPES: HouseType[] = [
     ],
     culturalInfo: 'A traditional Malay house with detailed architecture and textures.'
   },
+  // Epic Homes Models - 1 Module Variants
+  {
+    id: 'epic-homes-1-module-blue',
+    name: 'Epic Homes 1 Module - Blue',
+    description: 'A compact 1-module house design by Epic Homes with blue finish.',
+    model: ASSETS.models.epicHomes1ModuleBlue,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_1_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Blue roof tiles'
+    ],
+    culturalInfo: 'A compact, affordable housing solution with blue finish designed for community development.',
+    isEpicHomes: true
+  },
+  {
+    id: 'epic-homes-1-module-green',
+    name: 'Epic Homes 1 Module - Green',
+    description: 'A compact 1-module house design by Epic Homes with green finish.',
+    model: ASSETS.models.epicHomes1ModuleGreen,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_1_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Green roof tiles'
+    ],
+    culturalInfo: 'A compact, affordable housing solution with green finish designed for community development.',
+    isEpicHomes: true
+  },
+  {
+    id: 'epic-homes-1-module-brown',
+    name: 'Epic Homes 1 Module - Brown',
+    description: 'A compact 1-module house design by Epic Homes with brown finish.',
+    model: ASSETS.models.epicHomes1ModuleBrown,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_1_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Brown roof tiles'
+    ],
+    culturalInfo: 'A compact, affordable housing solution with brown finish designed for community development.',
+    isEpicHomes: true
+  },
+  // Epic Homes Models - 2 Module Variants
+  {
+    id: 'epic-homes-2-module-blue',
+    name: 'Epic Homes 2 Module - Blue',
+    description: 'A 2-module house design by Epic Homes with blue finish.',
+    model: ASSETS.models.epicHomes2ModuleBlue,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_2_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Blue roof tiles'
+    ],
+    culturalInfo: 'A modern, affordable housing solution with blue finish designed for community development.',
+    isEpicHomes: true
+  },
+  {
+    id: 'epic-homes-2-module-green',
+    name: 'Epic Homes 2 Module - Green',
+    description: 'A 2-module house design by Epic Homes with green finish.',
+    model: ASSETS.models.epicHomes2ModuleGreen,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_2_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Green roof tiles'
+    ],
+    culturalInfo: 'A modern, affordable housing solution with green finish designed for community development.',
+    isEpicHomes: true
+  },
+  {
+    id: 'epic-homes-2-module-brown',
+    name: 'Epic Homes 2 Module - Brown',
+    description: 'A 2-module house design by Epic Homes with brown finish.',
+    model: ASSETS.models.epicHomes2ModuleBrown,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_2_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Brown roof tiles'
+    ],
+    culturalInfo: 'A modern, affordable housing solution with brown finish designed for community development.',
+    isEpicHomes: true
+  },
   // Epic Homes Models - 4 Module Variants
   {
     id: 'epic-homes-4-module-blue',
@@ -57,7 +149,7 @@ export const HOUSE_TYPES: HouseType[] = [
     description: 'A 4-module house design by Epic Homes with blue finish.',
     model: ASSETS.models.epicHomes4ModuleBlue,
     thumbnail: ASSETS.thumbnails.default,
-    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE, // TODO: Verify actual dimensions
+    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE,
     materials: [
       'Concrete blocks',
       'Steel reinforcement',
@@ -72,7 +164,7 @@ export const HOUSE_TYPES: HouseType[] = [
     description: 'A 4-module house design by Epic Homes with green finish.',
     model: ASSETS.models.epicHomes4ModuleGreen,
     thumbnail: ASSETS.thumbnails.default,
-    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE, // TODO: Verify actual dimensions
+    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE,
     materials: [
       'Concrete blocks',
       'Steel reinforcement',
@@ -87,13 +179,59 @@ export const HOUSE_TYPES: HouseType[] = [
     description: 'A 4-module house design by Epic Homes with brown finish.',
     model: ASSETS.models.epicHomes4ModuleBrown,
     thumbnail: ASSETS.thumbnails.default,
-    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE, // TODO: Verify actual dimensions
+    dimensions: DIMENSIONS.EPIC_HOMES_4_MODULE,
     materials: [
       'Concrete blocks',
       'Steel reinforcement',
       'Brown roof tiles'
     ],
     culturalInfo: 'A modern, affordable housing solution with brown finish designed for community development.',
+    isEpicHomes: true
+  },
+  // Epic Homes Models - 6 Module Variants
+  {
+    id: 'epic-homes-6-module-blue',
+    name: 'Epic Homes 6 Module - Blue',
+    description: 'A spacious 6-module house design by Epic Homes with blue finish.',
+    model: ASSETS.models.epicHomes6ModuleBlue,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_6_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Blue roof tiles'
+    ],
+    culturalInfo: 'A spacious, affordable housing solution with blue finish designed for community development.',
+    isEpicHomes: true
+  },
+  {
+    id: 'epic-homes-6-module-green',
+    name: 'Epic Homes 6 Module - Green',
+    description: 'A spacious 6-module house design by Epic Homes with green finish.',
+    model: ASSETS.models.epicHomes6ModuleGreen,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_6_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Green roof tiles'
+    ],
+    culturalInfo: 'A spacious, affordable housing solution with green finish designed for community development.',
+    isEpicHomes: true
+  },
+  {
+    id: 'epic-homes-6-module-brown',
+    name: 'Epic Homes 6 Module - Brown',
+    description: 'A spacious 6-module house design by Epic Homes with brown finish.',
+    model: ASSETS.models.epicHomes6ModuleBrown,
+    thumbnail: ASSETS.thumbnails.default,
+    dimensions: DIMENSIONS.EPIC_HOMES_6_MODULE,
+    materials: [
+      'Concrete blocks',
+      'Steel reinforcement',
+      'Brown roof tiles'
+    ],
+    culturalInfo: 'A spacious, affordable housing solution with brown finish designed for community development.',
     isEpicHomes: true
   }
 ];
