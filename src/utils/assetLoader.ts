@@ -9,9 +9,18 @@ const ASSET_MANIFEST: AssetManifest = {
   models: [
     'house.glb',
     'traditional-malay-house.glb',
-    '4 Module - Blue.glb',
-    '4 Module - Green.glb',
-    '4 Module - Brown.glb',
+    '1 Module - Blue (centered).glb',
+    '1 Module - Green (centered).glb',
+    '1 Module - Brown (centered).glb',
+    '2 Module - Blue (centered).glb',
+    '2 Module - Green (centered).glb',
+    '2 Module - Brown (centered).glb',
+    '4 Module - Blue (centered).glb',
+    '4 Module - Green (centered).glb',
+    '4 Module - Brown (centered).glb',
+    '6 Module - Blue (centered).glb',
+    '6 Module - Green (centered).glb',
+    '6 Module - Brown (centered).glb',
   ],
   textures: [
     // Add texture paths here when needed

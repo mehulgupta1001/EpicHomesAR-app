@@ -25,7 +25,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onHouseSelect, onNavigat
       id: 'epic-homes-4-module-blue',
       name: 'Epic Homes 4 Module - Blue',
       description: 'A 4-module house design by Epic Homes with blue finish',
-      modelPath: '4 Module - Blue.glb',
+      modelPath: '4 Module - Blue (centered).glb',
       dimensions: {
         width: 6.1,
         length: 7.62,

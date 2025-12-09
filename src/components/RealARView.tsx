@@ -57,13 +57,38 @@ export default function RealARView({
       console.error('Real AR: Available properties:', JSON.stringify(selectedHouse, null, 2));
       
       // Fallback: Try to get filename from house ID
+      // All module houses now use centered versions
       let fallbackFileName = '';
-      if (selectedHouse.id.includes('blue')) {
-        fallbackFileName = '4 Module - Blue.glb';
+      if (selectedHouse.id.includes('1-module') && selectedHouse.id.includes('blue')) {
+        fallbackFileName = '1 Module - Blue (centered).glb';
+      } else if (selectedHouse.id.includes('1-module') && selectedHouse.id.includes('green')) {
+        fallbackFileName = '1 Module - Green (centered).glb';
+      } else if (selectedHouse.id.includes('1-module') && selectedHouse.id.includes('brown')) {
+        fallbackFileName = '1 Module - Brown (centered).glb';
+      } else if (selectedHouse.id.includes('2-module') && selectedHouse.id.includes('blue')) {
+        fallbackFileName = '2 Module - Blue (centered).glb';
+      } else if (selectedHouse.id.includes('2-module') && selectedHouse.id.includes('green')) {
+        fallbackFileName = '2 Module - Green (centered).glb';
+      } else if (selectedHouse.id.includes('2-module') && selectedHouse.id.includes('brown')) {
+        fallbackFileName = '2 Module - Brown (centered).glb';
+      } else if (selectedHouse.id.includes('4-module') && selectedHouse.id.includes('blue')) {
+        fallbackFileName = '4 Module - Blue (centered).glb';
+      } else if (selectedHouse.id.includes('4-module') && selectedHouse.id.includes('green')) {
+        fallbackFileName = '4 Module - Green (centered).glb';
+      } else if (selectedHouse.id.includes('4-module') && selectedHouse.id.includes('brown')) {
+        fallbackFileName = '4 Module - Brown (centered).glb';
+      } else if (selectedHouse.id.includes('6-module') && selectedHouse.id.includes('blue')) {
+        fallbackFileName = '6 Module - Blue (centered).glb';
+      } else if (selectedHouse.id.includes('6-module') && selectedHouse.id.includes('green')) {
+        fallbackFileName = '6 Module - Green (centered).glb';
+      } else if (selectedHouse.id.includes('6-module') && selectedHouse.id.includes('brown')) {
+        fallbackFileName = '6 Module - Brown (centered).glb';
+      } else if (selectedHouse.id.includes('blue')) {
+        fallbackFileName = '4 Module - Blue (centered).glb'; // Default to 4 Module if no module specified
       } else if (selectedHouse.id.includes('green')) {
-        fallbackFileName = '4 Module - Green.glb';
+        fallbackFileName = '4 Module - Green (centered).glb';
       } else if (selectedHouse.id.includes('brown')) {
-        fallbackFileName = '4 Module - Brown.glb';
+        fallbackFileName = '4 Module - Brown (centered).glb';
       } else if (selectedHouse.id.includes('traditional')) {
         fallbackFileName = 'traditional-malay-house.glb';
       } else if (selectedHouse.id.includes('default')) {
