@@ -48,6 +48,31 @@ const en: Translations = {
   'rattan': 'Rattan',
   'natural_fiber': 'Natural Fiber',
   'modern_binding': 'Modern Binding',
+  // HomeScreen translations
+  'app_title': 'Epic Homes AR',
+  'app_subtitle': 'Visualize Traditional Malaysian Indigenous Houses',
+  'features': 'Features',
+  'feature_ar_title': 'AR Visualization',
+  'feature_ar_desc': 'Place and view house designs in your environment',
+  'feature_materials_title': 'Material Options',
+  'feature_materials_desc': 'Explore traditional building materials',
+  'feature_houses_title': '5 House Types',
+  'feature_houses_desc': 'Traditional Orang Asli house designs',
+  'feature_share_title': 'Share & Save',
+  'feature_share_desc': 'Save and share your visualizations',
+  'about_title': 'About Epic Homes',
+  'about_text': 'Epic Homes is dedicated to building sustainable, traditional-style houses for indigenous communities in Malaysia. Our AR visualizer helps clients and communities explore different house designs while respecting cultural heritage.',
+  // AR Screen translations
+  'back': 'Back',
+  'place_model': 'Tap to place house model',
+  'surface_detecting': 'Detecting surface...',
+  'surface_detected': 'Surface detected! Tap to place.',
+  'loading_model': 'Loading model...',
+  'ar_error': 'AR Error',
+  'ar_error_message': 'AR session failed. Please ensure ARCore is installed and camera permissions are granted.',
+  // House types (will be used dynamically)
+  'house_default': 'Default House',
+  'house_traditional_malay': 'Traditional Malay House',
 };
 
 const ms: Translations = {
@@ -93,6 +118,31 @@ const ms: Translations = {
   'rattan': 'Rotan',
   'natural_fiber': 'Serat Semula Jadi',
   'modern_binding': 'Pengikat Moden',
+  // HomeScreen translations
+  'app_title': 'Epic Homes AR',
+  'app_subtitle': 'Visualisasikan Rumah Tradisional Orang Asli Malaysia',
+  'features': 'Ciri-ciri',
+  'feature_ar_title': 'Visualisasi AR',
+  'feature_ar_desc': 'Letakkan dan lihat reka bentuk rumah dalam persekitaran anda',
+  'feature_materials_title': 'Pilihan Bahan',
+  'feature_materials_desc': 'Terokai bahan binaan tradisional',
+  'feature_houses_title': '5 Jenis Rumah',
+  'feature_houses_desc': 'Reka bentuk rumah Orang Asli tradisional',
+  'feature_share_title': 'Kongsi & Simpan',
+  'feature_share_desc': 'Simpan dan kongsi visualisasi anda',
+  'about_title': 'Mengenai Epic Homes',
+  'about_text': 'Epic Homes komited untuk membina rumah gaya tradisional yang mampan untuk komuniti Orang Asli di Malaysia. Visualisasi AR kami membantu pelanggan dan komuniti meneroka pelbagai reka bentuk rumah sambil menghormati warisan budaya.',
+  // AR Screen translations
+  'back': 'Kembali',
+  'place_model': 'Ketuk untuk meletakkan model rumah',
+  'surface_detecting': 'Mengesan permukaan...',
+  'surface_detected': 'Permukaan dikesan! Ketuk untuk meletakkan.',
+  'loading_model': 'Memuatkan model...',
+  'ar_error': 'Ralat AR',
+  'ar_error_message': 'Sesi AR gagal. Sila pastikan ARCore dipasang dan kebenaran kamera diberikan.',
+  // House types
+  'house_default': 'Rumah Lalai',
+  'house_traditional_malay': 'Rumah Tradisional Melayu',
 };
 
 // Simple i18n implementation

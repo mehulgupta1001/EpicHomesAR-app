@@ -17,6 +17,8 @@ import { Tutorial } from '../components/Tutorial';
 import { HouseType } from '../constants/houseTypes';
 import { offlineManager } from '../services/OfflineManager';
 import { ConstructionProgress, StorageService } from '../services/storage';
+import { useLanguage } from '../hooks/useLanguage';
+import { LanguageToggle } from '../components/LanguageToggle';
 
 interface Measurements {
   width: number;
@@ -227,6 +229,7 @@ interface ARScreenProps {
 }
 
 export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => {
+  const { t } = useLanguage();
   const [showInfo, setShowInfo] = useState(false);
   const [isPlacingHouse, setIsPlacingHouse] = useState(true);
   const [showMeasurements, setShowMeasurements] = useState(false);
@@ -432,7 +435,7 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
             >
               <Text style={styles.navButtonText}>‹</Text>
             </TouchableOpacity>
-            <Text style={styles.stepCount}>{`${currentStep + 1}/${CONSTRUCTION_STEPS.length}`}</Text>
+            <Text style={styles.stepCount}>{`${currentStep + 1} ${t('of')} ${CONSTRUCTION_STEPS.length}`}</Text>
             <TouchableOpacity 
               style={[styles.navButton, currentStep === CONSTRUCTION_STEPS.length - 1 && styles.navButtonDisabled]}
               onPress={() => setCurrentStep(prev => Math.min(CONSTRUCTION_STEPS.length - 1, prev + 1))}
@@ -472,26 +475,26 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
 
           <Text style={styles.stepDescription}>{step.description}</Text>
           
-          <Text style={styles.sectionTitle}>Materials Needed:</Text>
+          <Text style={styles.sectionTitle}>{t('materials_needed')}:</Text>
           {step.materials.map((material, index) => (
             <Text key={`material-${index}`} style={styles.listItem}>• {material}</Text>
           ))}
           
-          <Text style={styles.sectionTitle}>Tools Required:</Text>
+          <Text style={styles.sectionTitle}>{t('tools_required')}:</Text>
           {step.tools.map((tool, index) => (
             <Text key={`tool-${index}`} style={styles.listItem}>• {tool}</Text>
           ))}
           
-          <Text style={styles.sectionTitle}>Estimated Time:</Text>
+          <Text style={styles.sectionTitle}>{t('estimated_time')}:</Text>
           <Text style={styles.timeEstimate}>{step.timeEstimate}</Text>
           
-          <Text style={styles.sectionTitle}>Safety Notes:</Text>
+          <Text style={styles.sectionTitle}>{t('safety_notes')}:</Text>
           {step.safetyNotes.map((note, index) => (
             <Text key={`safety-${index}`} style={styles.safetyNote}>⚠️ {note}</Text>
           ))}
 
           <View style={styles.notesSection}>
-            <Text style={styles.sectionTitle}>Progress Notes:</Text>
+            <Text style={styles.sectionTitle}>{t('notes')}:</Text>
             <TextInput
               style={styles.notesInput}
               multiline
@@ -508,6 +511,7 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
 
   return (
     <View style={styles.container} ref={viewRef}>
+      <LanguageToggle />
       {/* REAL AR Implementation - Uses ARCore for actual surface detection and 3D rendering */}
       <ARErrorBoundary>
         <RealARView
@@ -518,7 +522,7 @@ export const ARScreen: React.FC<ARScreenProps> = ({ selectedHouse, onBack }) => 
           }}
           onError={(error) => {
             console.error('AR Error:', error);
-            Alert.alert('AR Error', `AR session failed: ${error}\n\nPlease ensure ARCore is installed.`);
+            Alert.alert(t('ar_error'), `${t('ar_error_message')}: ${error}`);
           }}
         />
       </ARErrorBoundary>

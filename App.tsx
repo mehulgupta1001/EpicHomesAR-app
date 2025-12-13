@@ -4,10 +4,14 @@ import { COLORS } from './src/constants/colors';
 import { HouseType } from './src/constants/houseTypes';
 import { ARScreen } from './src/screens/ARScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { useLanguage } from './src/hooks/useLanguage';
 
 type Screen = 'home' | 'ar';
 
 function App(): React.JSX.Element {
+  // Initialize language hook to load saved preference
+  useLanguage();
+  
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [selectedHouse, setSelectedHouse] = useState<HouseType | null>(null);
 

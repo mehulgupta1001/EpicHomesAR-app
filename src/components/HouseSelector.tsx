@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { HOUSE_TYPES, HouseType } from '../constants/houseTypes';
 import { COLORS } from '../constants/values';
+import { useLanguage } from '../hooks/useLanguage';
 
 const { width, height } = Dimensions.get('window');
 const isLandscape = width > height;
@@ -26,9 +27,11 @@ export const HouseSelector: React.FC<HouseSelectorProps> = ({
   onSelect,
   selectedHouseId,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Select House Design</Text>
+      <Text style={styles.title}>{t('select_house')}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={true}

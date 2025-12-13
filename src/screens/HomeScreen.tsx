@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { HouseType } from '../constants/houseTypes';
 import { COLORS } from '../constants/colors';
+import { useLanguage } from '../hooks/useLanguage';
+import { LanguageToggle } from '../components/LanguageToggle';
 
 const { width } = Dimensions.get('window');
 
@@ -19,6 +21,8 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onHouseSelect, onNavigateToAR }) => {
+  const { t } = useLanguage();
+
   const handleStartAR = () => {
     // Select the first house by default for demo
     onHouseSelect({
@@ -42,8 +46,32 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onHouseSelect, onNavigat
     onNavigateToAR();
   };
 
+  const features = [
+    {
+      icon: '🏠',
+      title: t('feature_ar_title'),
+      description: t('feature_ar_desc'),
+    },
+    {
+      icon: '🎨',
+      title: t('feature_materials_title'),
+      description: t('feature_materials_desc'),
+    },
+    {
+      icon: '🏘️',
+      title: t('feature_houses_title'),
+      description: t('feature_houses_desc'),
+    },
+    {
+      icon: '📱',
+      title: t('feature_share_title'),
+      description: t('feature_share_desc'),
+    },
+  ];
+
   return (
     <ScrollView style={styles.container}>
+      <LanguageToggle />
       <View style={styles.hero}>
         <View style={styles.overlay}>
           <Image 
@@ -51,15 +79,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onHouseSelect, onNavigat
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.title}>Epic Homes AR</Text>
+          <Text style={styles.title}>{t('app_title')}</Text>
           <Text style={styles.subtitle}>
-            Visualize Traditional Malaysian Indigenous Houses
+            {t('app_subtitle')}
           </Text>
         </View>
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Features</Text>
+        <Text style={styles.sectionTitle}>{t('features')}</Text>
         <View style={styles.featureGrid}>
           {features.map((feature, index) => (
             <View key={index} style={styles.featureCard}>
@@ -71,46 +99,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onHouseSelect, onNavigat
         </View>
 
         <TouchableOpacity style={styles.startButton} onPress={handleStartAR}>
-          <Text style={styles.startButtonText}>Start AR Experience</Text>
+          <Text style={styles.startButtonText}>{t('start_ar')}</Text>
           <Text style={styles.startButtonIcon}>→</Text>
         </TouchableOpacity>
 
         <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>About Epic Homes</Text>
+          <Text style={styles.infoTitle}>{t('about_title')}</Text>
           <Text style={styles.infoText}>
-            Epic Homes is dedicated to building sustainable, traditional-style houses
-            for indigenous communities in Malaysia. Our AR visualizer helps clients
-            and communities explore different house designs while respecting
-            cultural heritage.
+            {t('about_text')}
           </Text>
         </View>
       </View>
     </ScrollView>
   );
 };
-
-const features = [
-  {
-    icon: '🏠',
-    title: 'AR Visualization',
-    description: 'Place and view house designs in your environment',
-  },
-  {
-    icon: '🎨',
-    title: 'Material Options',
-    description: 'Explore traditional building materials',
-  },
-  {
-    icon: '🏘️',
-    title: '5 House Types',
-    description: 'Traditional Orang Asli house designs',
-  },
-  {
-    icon: '📱',
-    title: 'Share & Save',
-    description: 'Save and share your visualizations',
-  },
-];
 
 const styles = StyleSheet.create({
   container: {
