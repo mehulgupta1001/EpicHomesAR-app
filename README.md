@@ -96,6 +96,25 @@ Epic Homes AR is a bilingual (English/Malay) mobile application that allows user
 
 ---
 
+## 📦 Download Working Prototype
+
+**Ready-to-use APK available!**
+
+The latest working prototype APK is available for direct download:
+
+- **📱 APK File**: [`APK Working Prototype - 2025-12-13/EpicHomesAR-Release.apk`](https://github.com/mehulgupta1001/EpicHomesAR-app/blob/pure-react-native/APK%20Working%20Prototype%20-%202025-12-13/EpicHomesAR-Release.apk)
+- **📝 Commit**: [c6f3b5f - Add working prototype APK using Git LFS](https://github.com/mehulgupta1001/EpicHomesAR-app/commit/c6f3b5f)
+
+**Installation Instructions:**
+1. Download the APK file from the link above
+2. Enable "Install from Unknown Sources" in your Android device settings
+3. Open the downloaded APK file to install
+4. Ensure ARCore is installed from Google Play Store (required for AR functionality)
+
+**Note**: The APK is stored using Git Large File Storage (LFS) due to its size (147 MB). You may need to install Git LFS to clone the repository, but the direct download link works without it.
+
+---
+
 ## 📖 Usage Guide
 
 ### For Users
