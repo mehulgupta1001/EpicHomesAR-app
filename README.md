@@ -105,11 +105,19 @@ The latest working prototype APK is available for direct download:
 - **📱 APK File**: [`APK Working Prototype - 2025-12-13/EpicHomesAR-Release.apk`](https://github.com/mehulgupta1001/EpicHomesAR-app/blob/pure-react-native/APK%20Working%20Prototype%20-%202025-12-13/EpicHomesAR-Release.apk)
 - **📝 Commit**: [c6f3b5f - Add working prototype APK using Git LFS](https://github.com/mehulgupta1001/EpicHomesAR-app/commit/c6f3b5f)
 
+**✅ Standalone Installation - No PC or Internet Required!**
+
+The APK is a **complete, standalone application**. Once installed:
+- ✅ **No PC/computer needed** - Install directly on your Android device
+- ✅ **No internet connection needed** - All house models are bundled in the APK
+- ✅ **Works completely offline** - All features function without WiFi or mobile data
+- ✅ **No development environment needed** - Just install and open the app
+
 **Installation Instructions:**
-1. Download the APK file from the link above
-2. Enable "Install from Unknown Sources" in your Android device settings
+1. Download the APK file from the link above (on your Android device or transfer from computer)
+2. Enable "Install from Unknown Sources" in your Android device settings (Settings → Security → Unknown Sources)
 3. Open the downloaded APK file to install
-4. Ensure ARCore is installed from Google Play Store (required for AR functionality)
+4. **One-time requirement**: Ensure ARCore is installed from Google Play Store (if not already installed - required for AR functionality)
 
 **Note**: The APK is stored using Git Large File Storage (LFS) due to its size (147 MB). You may need to install Git LFS to clone the repository, but the direct download link works without it.
 
