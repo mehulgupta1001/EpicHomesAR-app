@@ -107,7 +107,7 @@ All prototypes are in separate folders. **Latest (recommended):**
 **Previous prototypes (kept for reference):**
 
 - **Dec 13, 2025**: [`APK Working Prototype - 2025-12-13/EpicHomesAR-Release.apk`](https://github.com/mehulgupta1001/EpicHomesAR-app/blob/pure-react-native/APK%20Working%20Prototype%20-%202025-12-13/EpicHomesAR-Release.apk)
-- **Nov 19**: [`APK working protoype - 19.11/`](https://github.com/mehulgupta1001/EpicHomesAR-app/blob/pure-react-native/APK%20working%20protoype%20-%2019.11/) (folder)
+- **Nov 19**: `APK working protoype - 19.11/` (add to repo if you want it listed here)
 
 **✅ Standalone Installation - No PC or Internet Required!**
 
