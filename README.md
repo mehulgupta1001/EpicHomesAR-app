@@ -98,12 +98,16 @@ Epic Homes AR is a bilingual (English/Malay) mobile application that allows user
 
 ## 📦 Download Working Prototype
 
-**Ready-to-use APK available!**
+**Ready-to-use APKs available!**
 
-The latest working prototype APK is available for direct download:
+All prototypes are in separate folders. **Latest (recommended):**
 
-- **📱 APK File**: [`APK Working Prototype - 2025-12-13/EpicHomesAR-Release.apk`](https://github.com/mehulgupta1001/EpicHomesAR-app/blob/pure-react-native/APK%20Working%20Prototype%20-%202025-12-13/EpicHomesAR-Release.apk)
-- **📝 Commit**: [5c5203f - Update release APK: latest build with feet-on-surface fix, standalone bundle for Epic Homes](https://github.com/mehulgupta1001/EpicHomesAR-app/commit/5c5203f)
+- **📱 Latest APK (V3)**: [`APK Working Prototype - 2026-01-27/Epic Homes AR Visualizer V3.apk`](https://github.com/mehulgupta1001/EpicHomesAR-app/blob/pure-react-native/APK%20Working%20Prototype%20-%202026-01-27/Epic%20Homes%20AR%20Visualizer%20V3.apk) — feet-on-surface fix, standalone bundle
+
+**Previous prototypes (kept for reference):**
+
+- **Dec 13, 2025**: [`APK Working Prototype - 2025-12-13/EpicHomesAR-Release.apk`](https://github.com/mehulgupta1001/EpicHomesAR-app/blob/pure-react-native/APK%20Working%20Prototype%20-%202025-12-13/EpicHomesAR-Release.apk)
+- **Nov 19**: [`APK working protoype - 19.11/`](https://github.com/mehulgupta1001/EpicHomesAR-app/blob/pure-react-native/APK%20working%20protoype%20-%2019.11/) (folder)
 
 **✅ Standalone Installation - No PC or Internet Required!**
 
