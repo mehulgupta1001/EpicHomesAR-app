@@ -145,10 +145,21 @@ index 0000000..3333333 100644
 +  
 +  // Store the minimum scale limit to prevent flipping
 +  private var minScaleLimit: Float? = null
-+  
++
++  // Store the model's bottom offset (in model space) so we can keep feet on ground when scaling
++  private var groundOffsetY: Float? = null
++
 +  // Track if we've captured the initial scale
 +  private var hasCapturedInitialScale = false
-+  
++
++  /**
++   * Set the Y offset from model center to bottom (positive = down). Used to keep model base on surface when scaling.
++   */
++  fun setGroundOffsetY(value: Float) {
++    groundOffsetY = value
++    Log.d("ARview scale", "CustomScaleController: groundOffsetY set to $value (feet will stay on surface when scaling)")
++  }
++
 +  /**
 +   * Set the initial scale that should be preserved
 +   * This should be called after the model's scale is set initially
@@ -200,9 +211,15 @@ index 0000000..3333333 100644
 +        transformableNode.localScale = Vector3(maxScaleLimit, maxScaleLimit, maxScaleLimit)
 +        Log.d("ARview scale", "CustomScaleController: Scale clamped to maximum ${maxScaleLimit} during gesture")
 +      }
++      // Keep model base on surface: position.y = -groundOffsetY * scale so feet stay on polka-dot plane
++      if (groundOffsetY != null) {
++        val pos = transformableNode.localPosition
++        val s = transformableNode.localScale.x
++        transformableNode.localPosition = Vector3(pos.x, -groundOffsetY!! * s, pos.z)
++      }
 +    }
 +  }
-+  
++
 +  override fun onEndTransformation(gesture: PinchGesture) {
 +    super.onEndTransformation(gesture)
 +    
@@ -216,6 +233,12 @@ index 0000000..3333333 100644
 +      if (Math.abs(currentScale.x - clampedScale) > 0.001f) {
 +        transformableNode.localScale = Vector3(clampedScale, clampedScale, clampedScale)
 +        Log.d("ARview scale", "CustomScaleController: Scale clamped to ${clampedScale} after gesture end")
++      }
++      // Keep model base on surface after gesture end
++      if (groundOffsetY != null) {
++        val pos = transformableNode.localPosition
++        val s = transformableNode.localScale.x
++        transformableNode.localPosition = Vector3(pos.x, -groundOffsetY!! * s, pos.z)
 +      }
 +    }
 +  }
