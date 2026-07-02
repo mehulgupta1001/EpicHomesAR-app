@@ -361,6 +361,41 @@ This project is proprietary software developed for Epic Homes. All rights reserv
 
 ---
 
+## ⚠️ Known limitation: AR model colors (Android)
+
+On Android, 3D house models in AR may render **white** instead of Epic Homes’ intended colors. This comes from the **display stack** (Sceneform + Filament), not from the GLB files.
+
+**Why colors may still not show (zoomed out):** This repo already uses a patched Sceneform (`sceneform-patched/`): `android/settings.gradle` substitutes the Sceneform dependency with the local project, and the code calls `ResourceLoader.loadResources(createdAsset)` after creating the GLB asset. If colors still do not show, likely causes: (1) **APK not built with the patched Sceneform** (e.g. old APK or no clean build). (2) **GLBs use only baseColorFactor** (no image textures), so loadResources does not add color and Filament may not apply baseColorFactor in this setup. (3) Different Filament/gltfio behavior with embedded resources. **Next step:** Do a **clean release build** and test that APK. On **Windows** (PowerShell or Command Prompt): `cd android` then `gradlew.bat clean` then `gradlew.bat assembleRelease`. On Mac/Linux: `cd android && ./gradlew clean && ./gradlew assembleRelease`. Alternatively run `npx react-native run-android --mode=release` from the project root (after `cd android` and `gradlew.bat clean` on Windows). If colors still do not show, use **Option 1 (Blender vertex colors)** below.
+
+**Best, foolproof ways to fix it without changing the tech stack:**
+
+### Option 1: Re-export GLBs with baked vertex colors (if pipeline fix is not enough)
+
+- **What:** Bake the **existing** Epic Homes materials/panels/colors into **vertex colors** in Blender, then re-export GLB. The look stays the same; only the way color is stored changes so Filament can show it.
+- **Easiest: use the script**  
+  See **`scripts/README-BLENDER-BAKE.md`** and **`scripts/blender_bake_vertex_colors.py`**. In Blender: File → Open your house GLB → Scripting workspace → Open and run `blender_bake_vertex_colors.py` → copy the `*_baked.glb` into `android/app/src/main/assets/models/houses/` and `src/assets/models/houses/`, then rebuild.
+- **Manual Blender steps (one model):**  
+  1. Install [Blender](https://www.blender.org/download/) (free).  
+  2. File → Open → pick your `X Module - Y (centered).glb`.  
+  3. Select all meshes (Select → Select All by Type → Mesh).  
+  4. Object Data Properties (green triangle) → Vertex Colors → **+** (e.g. name `Col`).  
+  5. Render Properties (camera) → Render Engine = **Cycles**.  
+  6. Render → Bake → Bake Type **Diffuse**, Target **Vertex Colors** → Bake.  
+  7. File → Export → glTF 2.0 (.glb) → enable **Vertex Colors** / Attributes → Export.  
+  8. Put the new GLB in `android/app/src/main/assets/models/houses/` and `src/assets/models/houses/`, then rebuild.
+- **Who:** You or Epic Homes / 3D designer; repeat for each model variant if needed.
+
+### Option 2: Loader fix (already applied in this repo)
+
+- **What:** The pipeline should call Filament’s `ResourceLoader.loadResources(asset)` **right after** the GLB asset is created and **before** the renderable is built. Today that call either doesn’t happen or happens too late in the gorisse Sceneform path.
+- **How:** Use a **patched** version of the Sceneform dependency (e.g. fork [SceneView/SceneformMaintained](https://github.com/SceneView/SceneformMaintained) or the gorisse source), add the `loadResources(asset)` call in the GLB load task after `AssetLoader` creates the asset, build the AAR locally, and point the app’s `react-native-ar-viewer` Android build to that AAR (e.g. `implementation project(':sceneform')` or a local Maven path). No change to React Native or to how the app uses the viewer.
+- **Why it’s foolproof:** Same stack and APIs; only the native library that loads the GLB is replaced with a version that loads textures correctly.
+- **Who:** A dev with Android/native build access; maintain the fork or patch when updating Sceneform.
+
+**Other options (higher risk or trade-offs):** Switching to another AR/3D stack, or opening the model in Google Scene Viewer via intent (colors may work there but UX is different).
+
+---
+
 ## 🙏 Acknowledgments
 
 - **Epic Homes** - For the opportunity and collaboration

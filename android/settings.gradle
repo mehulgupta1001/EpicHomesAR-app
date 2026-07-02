@@ -4,3 +4,9 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autoli
 rootProject.name = 'EpicHomesARPureRN'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+// Patched Sceneform (GLB materials fix) — only core/ux/sceneform, no samples
+includeBuild('../sceneform-patched') {
+  dependencySubstitution {
+    substitute(module("com.gorisse.thomas.sceneform:sceneform")).using(project(":sceneform"))
+  }
+}
