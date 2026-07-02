@@ -88,7 +88,7 @@ index 9267238..a295c32 100644
    react {
      jsRootDir = file("../src/")
 diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
-index 882495e..1cd0eb2 100644
+index 882495e..c84be81 100644
 --- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
 +++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
 @@ -4,7 +4,6 @@ import android.app.Activity
@@ -99,13 +99,16 @@ index 882495e..1cd0eb2 100644
  import android.os.Handler
  import android.os.Looper
  import android.util.AttributeSet
-@@ -15,757 +14,626 @@ import android.view.GestureDetector.SimpleOnGestureListener
+@@ -15,757 +14,689 @@ import android.view.GestureDetector.SimpleOnGestureListener
  import android.view.MotionEvent
  import android.view.PixelCopy
  import android.view.ViewGroup
 -import android.view.ViewTreeObserver.OnWindowFocusChangeListener
  import android.widget.FrameLayout
 +import androidx.activity.ComponentActivity
++import androidx.lifecycle.DefaultLifecycleObserver
++import androidx.lifecycle.Lifecycle
++import androidx.lifecycle.LifecycleOwner
  import com.facebook.react.bridge.Arguments
  import com.facebook.react.uimanager.ThemedReactContext
  import com.facebook.react.uimanager.events.RCTEventEmitter
@@ -128,6 +131,7 @@ index 882495e..1cd0eb2 100644
 +import com.google.ar.core.Frame
 +import com.google.ar.core.Plane
 +import com.google.ar.core.Pose
++import com.google.ar.core.Session
 +import com.google.ar.core.TrackingState
 +import io.github.sceneview.ar.ARSceneView
 +import io.github.sceneview.ar.arcore.isTracking
@@ -165,14 +169,6 @@ index 882495e..1cd0eb2 100644
 -   * Event listener that triggers when the ARCore Session is to be configured
 -   */
 -  private val onSessionConfigurationListener: OnSessionConfigurationListener? = null
--
--  /**
--   * Main view state
--   */
--  private var isStarted = false
--  /**
--   * ARCore installation requirement state
--   */
 +  context: ThemedReactContext,
 +  attrs: AttributeSet? = null,
 +  defStyleAttr: Int = 0
@@ -185,7 +181,14 @@ index 882495e..1cd0eb2 100644
 +  private var modelLoadPath: String? = null
 +  private var pendingModelSrc: String? = null
 +  private var arInitScheduled = false
-+
+ 
+-  /**
+-   * Main view state
+-   */
+-  private var isStarted = false
+-  /**
+-   * ARCore installation requirement state
+-   */
    private var installRequested = false
 -  /**
 -   * Failed session initialization state
@@ -245,6 +248,8 @@ index 882495e..1cd0eb2 100644
 -   */
    private var gestureDetector: GestureDetector? = null
 +  private val mainHandler = Handler(Looper.getMainLooper())
++  private var pendingLifecycleObserver: DefaultLifecycleObserver? = null
++  private var sessionReady = false
  
 -  /**
 -   * Reminder to keep source of model loading
@@ -444,13 +449,28 @@ index 882495e..1cd0eb2 100644
 -  private fun makeTransformationSystem(): TransformationSystem {
 -    val selectionVisualizer = FootprintSelectionVisualizer()
 -    return TransformationSystem(resources.displayMetrics, selectionVisualizer)
--  }
--
--  /**
++    if (!ensureArCoreReady(activity)) {
++      arInitScheduled = false
++      return
++    }
++
++    createArSceneViewWhenReady(reactContext, activity)
++    arInitScheduled = false
++
++    pendingModelSrc?.let { src ->
++      pendingModelSrc = null
++      loadModel(src)
++    }
+   }
+ 
+   /**
 -   * Makes the transformation system responding to touches
 -   * CRITICAL: Enhanced to handle gestures even when model is too large/close
 -   * If model is selected but touch doesn't hit it directly, still process gestures
--   */
++   * SceneView starts its render loop on lifecycle resume. If we construct ARSceneView while the
++   * activity is already resumed (typical in React Native), Session.update() can run before ARCore's
++   * camera/image subsystem is started and crash with FatalException.
+    */
 -  override fun onPeekTouch(hitTestResult: HitTestResult, motionEvent: MotionEvent?) {
 -    // CRITICAL: If model is selected but touch doesn't hit it directly (e.g., model is too large/close),
 -    // still pass the touch to transformation system so gestures can work
@@ -466,26 +486,38 @@ index 882495e..1cd0eb2 100644
 -        val syntheticHitResult = HitTestResult()
 -        syntheticHitResult.node = modelNode
 -        syntheticHitResult
--      }
++  private fun createArSceneViewWhenReady(
++    reactContext: ThemedReactContext,
++    activity: ComponentActivity
++  ) {
++    val startCreate = {
++      if (arView == null) {
++        createArSceneView(reactContext, activity)
+       }
 -      transformationSystem!!.onTouch(effectiveHitResult, motionEvent)
 -    } else {
 -      // Normal hit-testing for placement and direct model interaction
 -      transformationSystem!!.onTouch(hitTestResult, motionEvent)
-+    if (!ensureArCoreReady(activity)) {
-+      arInitScheduled = false
-+      return
      }
 -    
 -    if (hitTestResult.node == null && motionEvent != null) {
 -      gestureDetector!!.onTouchEvent(motionEvent)
 +
-+    createArSceneView(reactContext, activity)
-+    arInitScheduled = false
-+
-+    pendingModelSrc?.let { src ->
-+      pendingModelSrc = null
-+      loadModel(src)
++    if (activity.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
++      // Double-post so ARCore resume handlers run before the first Session.update().
++      mainHandler.post { mainHandler.post { startCreate() } }
++      return
      }
++
++    pendingLifecycleObserver?.let { activity.lifecycle.removeObserver(it) }
++    pendingLifecycleObserver = object : DefaultLifecycleObserver {
++      override fun onResume(owner: LifecycleOwner) {
++        owner.lifecycle.removeObserver(this)
++        pendingLifecycleObserver = null
++        mainHandler.post { startCreate() }
++      }
++    }
++    activity.lifecycle.addObserver(pendingLifecycleObserver!!)
    }
  
 -  /**
@@ -502,11 +534,19 @@ index 882495e..1cd0eb2 100644
 +  private fun createArSceneView(reactContext: ThemedReactContext, activity: ComponentActivity) {
 +    try {
 +      arView = ARSceneView(
-+        context = activity,
++        context = reactContext,
 +        sharedActivity = activity,
 +        sharedLifecycle = activity.lifecycle,
-+        sessionConfiguration = { _, config -> applySessionConfig(config) },
-+        onSessionCreated = { sendStartedEvent() },
++        sessionConfiguration = { session, config -> applySessionConfig(session, config) },
++        onSessionCreated = { session ->
++          sessionReady = true
++          enableOptionalSessionFeatures(session)
++          sendStartedEvent()
++        },
++        onSessionResumed = { session ->
++          sessionReady = true
++          Log.d("ARview session", "ARCore session resumed")
++        },
 +        onSessionFailed = { error ->
 +          Log.e("ARview session", "SceneView session failed", error)
 +          sessionInitializationFailed = true
@@ -637,35 +677,28 @@ index 882495e..1cd0eb2 100644
  
 -  private fun initAnchorNode(anchor: Anchor) {
 -    val anchorNode = AnchorNode(anchor)
-+  private fun applySessionConfig(config: Config) {
+-
+-    anchorNode.parent = arView!!.scene
+-    modelNode!!.parent = anchorNode
++  private fun applySessionConfig(session: Session, config: Config) {
 +    updatePlaneDetection(config)
-+    updateLightEstimation(config)
-+    updateDepthManagement(config)
++    // Start with conservative camera settings; enable HDR depth after session is running.
++    config.lightEstimationMode = if (isLightEstimationEnabled) {
++      Config.LightEstimationMode.AMBIENT_INTENSITY
++    } else {
++      Config.LightEstimationMode.DISABLED
++    }
++    config.depthMode = Config.DepthMode.DISABLED
 +    config.focusMode = Config.FocusMode.AUTO
 +    config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
 +  }
-+
-+  private fun onArFrame(frame: Frame) {
-+    val view = arView ?: return
-+
-+    if (instructionsController != null) {
-+      val hasTrackedPlane = frame.getUpdatedTrackables(Plane::class.java)
-+        .any { it.trackingState == TrackingState.TRACKING }
-+      val showPlaneInstructions = !hasTrackedPlane
-+      if (instructionsController?.isVisible() != showPlaneInstructions) {
-+        instructionsController?.setVisible(showPlaneInstructions)
-+      }
-+    }
- 
--    anchorNode.parent = arView!!.scene
--    modelNode!!.parent = anchorNode
-+    keepFeetOnSurface()
  
 -    // Animate if has animation
 -    val renderableInstance = modelNode?.renderableInstance
 -    if (renderableInstance != null && renderableInstance.hasAnimations()) {
 -      renderableInstance.animate(true).start()
-+    if (!isInstantPlacementEnabled || modelInstance == null || anchorNode != null) {
++  private fun enableOptionalSessionFeatures(session: Session) {
++    if (!isDepthManagementEnabled) {
 +      return
      }
 -    
@@ -676,10 +709,13 @@ index 882495e..1cd0eb2 100644
 -      modelNode!!.select()
 -      // Re-apply transforms to ensure controllers are enabled
 -      onTransformChanged()
-+    if (frame.camera.trackingState != TrackingState.TRACKING) {
-+      return
++    if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
++      val config = Config(session)
++      config.depthMode = Config.DepthMode.AUTOMATIC
++      session.configure(config)
++      Log.d("ARview session", "Depth mode enabled after session start")
      }
--  }
+   }
  
 -  private fun onModelPlaced() {
 -    val event = Arguments.createMap()
@@ -689,12 +725,12 @@ index 882495e..1cd0eb2 100644
 -      "onModelPlaced",
 -      event
 -    )
-+    val pos = floatArrayOf(0f, 0f, -1f)
-+    val rotation = floatArrayOf(0f, 0f, 0f, 1f)
-+    val anchor = view.session?.createAnchor(Pose(pos, rotation)) ?: return
-+    attachModelToAnchor(anchor)
-+    onModelPlaced()
-   }
+-  }
++  private fun onArFrame(frame: Frame) {
++    val view = arView ?: return
++    if (!sessionReady) {
++      return
++    }
  
 -  /**
 -   * Request ARCore installation
@@ -704,15 +740,14 @@ index 882495e..1cd0eb2 100644
 -      InstallStatus.INSTALL_REQUESTED -> {
 -        installRequested = true
 -        return true
--      }
++    if (instructionsController != null) {
++      val hasTrackedPlane = frame.getUpdatedTrackables(Plane::class.java)
++        .any { it.trackingState == TrackingState.TRACKING }
++      val showPlaneInstructions = !hasTrackedPlane
++      if (instructionsController?.isVisible() != showPlaneInstructions) {
++        instructionsController?.setVisible(showPlaneInstructions)
+       }
 -      InstallStatus.INSTALLED -> {}
-+  private fun onSingleTap(event: MotionEvent) {
-+    val view = arView ?: return
-+    if (modelInstance == null || view.frame == null) {
-+      return
-+    }
-+    if (view.frame?.camera?.trackingState != TrackingState.TRACKING) {
-+      return
      }
 -    return false
 -  }
@@ -725,11 +760,21 @@ index 882495e..1cd0eb2 100644
 -    sessionConfig.let {
 -      updatePlaneDetection(sessionConfig)
 -      updateConfig()
-+    val planeTypes = getPlaneTypesSet()
-+    if (planeTypes.isEmpty()) {
++    keepFeetOnSurface()
++
++    if (!isInstantPlacementEnabled || modelInstance == null || anchorNode != null) {
 +      return
      }
--  }
++    if (frame.camera.trackingState != TrackingState.TRACKING) {
++      return
++    }
++
++    val pos = floatArrayOf(0f, 0f, -1f)
++    val rotation = floatArrayOf(0f, 0f, 0f, 1f)
++    val anchor = view.session?.createAnchor(Pose(pos, rotation)) ?: return
++    attachModelToAnchor(anchor)
++    onModelPlaced()
+   }
  
 -  private fun updatePlaneDetection(config: Config?) {
 -    when (planeOrientationMode) {
@@ -761,6 +806,20 @@ index 882495e..1cd0eb2 100644
 -          modelNode!!.translationController.allowedPlaneTypes.clear()
 -        }
 -      }
++  private fun onSingleTap(event: MotionEvent) {
++    val view = arView ?: return
++    if (modelInstance == null || view.frame == null) {
++      return
++    }
++    if (view.frame?.camera?.trackingState != TrackingState.TRACKING) {
++      return
++    }
++
++    val planeTypes = getPlaneTypesSet()
++    if (planeTypes.isEmpty()) {
++      return
++    }
++
 +    val hit = view.hitTestAR(
 +      xPx = event.x,
 +      yPx = event.y,
@@ -823,7 +882,6 @@ index 882495e..1cd0eb2 100644
 -      config?.lightEstimationMode = Config.LightEstimationMode.DISABLED
 -    } else {
 -      config?.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
--    }
 +  private fun applyModelTransform(node: ModelNode, scale: Float) {
 +    val center = node.center
 +    val halfExtent = node.halfExtent
@@ -839,16 +897,8 @@ index 882495e..1cd0eb2 100644
 +      "ARview scale",
 +      "Applied transform scale=$scale groundOffsetY=$modelGroundOffsetY pos=($posX, ${-modelGroundOffsetY * scale}, $posZ)"
 +    )
-   }
- 
--  /**
--   * Set whether depth management is enabled
--   */
--  fun setDepthManagementEnabled(isEnabled: Boolean) {
--    isDepthManagementEnabled = isEnabled
--    sessionConfig.let {
--      updateDepthManagement(sessionConfig)
--      updateConfig()
++  }
++
 +  private fun keepFeetOnSurface() {
 +    val node = modelNode ?: return
 +    val s = node.scale.x
@@ -859,15 +909,14 @@ index 882495e..1cd0eb2 100644
      }
    }
  
--  private fun updateDepthManagement(config: Config?) {
--    if (!isDepthManagementEnabled) {
--      sessionConfig?.depthMode = Config.DepthMode.DISABLED
--      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED
--    } else {
--      if(arSession?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true) {
--        sessionConfig?.depthMode = Config.DepthMode.AUTOMATIC
--      }
--      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_ENABLED
+-  /**
+-   * Set whether depth management is enabled
+-   */
+-  fun setDepthManagementEnabled(isEnabled: Boolean) {
+-    isDepthManagementEnabled = isEnabled
+-    sessionConfig.let {
+-      updateDepthManagement(sessionConfig)
+-      updateConfig()
 +  private fun getModuleScale(modelSrc: String): Float {
 +    val is6ModuleHouse = modelSrc.contains("6 Module", ignoreCase = true) ||
 +      modelSrc.contains("6Module", ignoreCase = true) ||
@@ -895,10 +944,13 @@ index 882495e..1cd0eb2 100644
      }
    }
  
--  private fun updateConfig() {
--    if (isStarted) {
--      arSession?.configure(sessionConfig)
--    }
+-  private fun updateDepthManagement(config: Config?) {
+-    if (!isDepthManagementEnabled) {
+-      sessionConfig?.depthMode = Config.DepthMode.DISABLED
+-      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED
+-    } else {
+-      if(arSession?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true) {
+-        sessionConfig?.depthMode = Config.DepthMode.AUTOMATIC
 +  private fun applyScaleLimits(initialScale: Float) {
 +    val minScale = 0.06f
 +    val maxScale = maxOf(initialScale * 8f, 1.2f)
@@ -920,6 +972,15 @@ index 882495e..1cd0eb2 100644
 +  }
 +
 +  fun onDrop() {
++    pendingLifecycleObserver?.let { observer ->
++      val activity = (context as? ThemedReactContext)?.currentActivity
++      if (activity is LifecycleOwner) {
++        activity.lifecycle.removeObserver(observer)
+       }
+-      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_ENABLED
+     }
++    pendingLifecycleObserver = null
++    sessionReady = false
 +    detachCurrentAnchor()
 +    modelInstance = null
 +    modelLoadPath = null
@@ -929,23 +990,10 @@ index 882495e..1cd0eb2 100644
 +    arView = null
    }
  
--  /**
--   * Start the loading of a GLB model URI
--   */
-   fun loadModel(src: String) {
--    if (isDeviceSupported) {
--      if (modelNode?.parent is AnchorNode) {
--        Log.d("ARview model", "detaching")
--        (modelNode!!.parent as AnchorNode).anchor?.detach() // free up memory of anchor
--        arView?.scene?.removeChild(modelNode)
--        modelNode = null
--        val event = Arguments.createMap()
--        val reactContext = context as ThemedReactContext
--        reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
--          id,
--          "onModelRemoved",
--          event
--        )
+-  private fun updateConfig() {
+-    if (isStarted) {
+-      arSession?.configure(sessionConfig)
++  fun loadModel(src: String) {
 +    modelSrc = src
 +
 +    if (arView == null) {
@@ -987,6 +1035,38 @@ index 882495e..1cd0eb2 100644
 +        Log.e("ARview model", "SceneView load failed", e)
 +        isLoading = false
 +        returnErrorEvent("Cannot load the model: ${e.message}")
++      }
+     }
+   }
+ 
+-  /**
+-   * Start the loading of a GLB model URI
+-   */
+-  fun loadModel(src: String) {
+-    if (isDeviceSupported) {
+-      if (modelNode?.parent is AnchorNode) {
+-        Log.d("ARview model", "detaching")
+-        (modelNode!!.parent as AnchorNode).anchor?.detach() // free up memory of anchor
+-        arView?.scene?.removeChild(modelNode)
+-        modelNode = null
+-        val event = Arguments.createMap()
+-        val reactContext = context as ThemedReactContext
+-        reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+-          id,
+-          "onModelRemoved",
+-          event
+-        )
++  private fun resolveModelPath(src: String): String {
++    if (src.startsWith("file://") || src.startsWith("http://") || src.startsWith("https://")) {
++      return src
++    }
++    return try {
++      context.assets.open(src).use { input ->
++        val name = src.substringAfterLast('/').ifEmpty { "model.glb" }
++        val cacheFile = File(context.cacheDir, "ar_model_$name")
++        FileOutputStream(cacheFile).use { output -> input.copyTo(output) }
++        Log.d("ARview model", "Copied asset to cache: ${cacheFile.absolutePath}")
++        cacheFile.absolutePath
        }
 -      Log.d("ARview model", "loading")
 -      modelSrc = src
@@ -1050,6 +1130,9 @@ index 882495e..1cd0eb2 100644
 -          returnErrorEvent("Cannot load the model: " + it.message)
 -          return@exceptionally null
 -        }
++    } catch (e: Exception) {
++      Log.w("ARview model", "Cache copy failed, using asset path: ${e.message}")
++      src
      }
    }
  
@@ -1059,24 +1142,6 @@ index 882495e..1cd0eb2 100644
 -  fun rotateModel(pitch: Number, yaw: Number, roll:Number) {
 -    Log.d("ARview rotateModel", "pitch: $pitch deg / yaw: $yaw deg / roll: $roll deg")
 -    modelNode?.localRotation = Quaternion.multiply(modelNode?.localRotation, Quaternion.eulerAngles(Vector3(pitch.toFloat(), yaw.toFloat(), roll.toFloat())))
-+  private fun resolveModelPath(src: String): String {
-+    if (src.startsWith("file://") || src.startsWith("http://") || src.startsWith("https://")) {
-+      return src
-+    }
-+    return try {
-+      context.assets.open(src).use { input ->
-+        val name = src.substringAfterLast('/').ifEmpty { "model.glb" }
-+        val cacheFile = File(context.cacheDir, "ar_model_$name")
-+        FileOutputStream(cacheFile).use { output -> input.copyTo(output) }
-+        Log.d("ARview model", "Copied asset to cache: ${cacheFile.absolutePath}")
-+        cacheFile.absolutePath
-+      }
-+    } catch (e: Exception) {
-+      Log.w("ARview model", "Cache copy failed, using asset path: ${e.message}")
-+      src
-+    }
-+  }
-+
 +  fun rotateModel(pitch: Number, yaw: Number, roll: Number) {
 +    val node = modelNode ?: return
 +    val delta = Rotation(yaw.toFloat(), pitch.toFloat(), roll.toFloat())
@@ -1146,11 +1211,6 @@ index 882495e..1cd0eb2 100644
 -    Log.d("ARview transforms", "Applied transforms - scale: $scaleEnabled, rotate: $rotateEnabled, translate: $translateEnabled")
 -    Log.d("ARview controllers", "scaleEnabled: ${modelNode!!.scaleController.isEnabled}, rotateEnabled: ${modelNode!!.rotationController.isEnabled}, translateEnabled: ${modelNode!!.translationController.isEnabled}")
 -    Log.d("ARview selection", "Model selected: ${modelNode!!.isSelected}")
--  }
--
--  /**
--   * Enable/Disable instructions
--   */
 +
 +    node.isScaleEditable = scaleEnabled
 +    node.isRotationEditable = rotateEnabled
@@ -1164,7 +1224,7 @@ index 882495e..1cd0eb2 100644
 +
 +  fun setPlaneDetection(planeOrientation: String) {
 +    planeOrientationMode = planeOrientation
-+    arView?.configureSession { _, config -> applySessionConfig(config) }
++    arView?.configureSession { session, config -> applySessionConfig(session, config) }
 +  }
 +
 +  private fun updatePlaneDetection(config: Config) {
@@ -1182,34 +1242,26 @@ index 882495e..1cd0eb2 100644
 +
 +  fun setLightEstimationEnabled(isEnabled: Boolean) {
 +    isLightEstimationEnabled = isEnabled
-+    arView?.configureSession { _, config -> applySessionConfig(config) }
-+  }
-+
-+  private fun updateLightEstimation(config: Config) {
++    val session = arView?.session ?: return
++    val config = Config(session)
 +    config.lightEstimationMode = if (isLightEstimationEnabled) {
-+      Config.LightEstimationMode.ENVIRONMENTAL_HDR
++      Config.LightEstimationMode.AMBIENT_INTENSITY
 +    } else {
 +      Config.LightEstimationMode.DISABLED
 +    }
++    session.configure(config)
 +  }
 +
 +  fun setDepthManagementEnabled(isEnabled: Boolean) {
 +    isDepthManagementEnabled = isEnabled
-+    arView?.configureSession { _, config -> applySessionConfig(config) }
-+  }
-+
-+  private fun updateDepthManagement(config: Config) {
-+    val session = arView?.session
-+    config.depthMode = if (
-+      isDepthManagementEnabled &&
-+      session?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true
-+    ) {
-+      Config.DepthMode.AUTOMATIC
-+    } else {
-+      Config.DepthMode.DISABLED
++    arView?.session?.let { session ->
++      enableOptionalSessionFeatures(session)
 +    }
-+  }
-+
+   }
+ 
+-  /**
+-   * Enable/Disable instructions
+-   */
    fun setInstructionsEnabled(isEnabled: Boolean) {
      isInstructionsEnabled = isEnabled
      instructionsController?.setEnabled(isInstructionsEnabled)
