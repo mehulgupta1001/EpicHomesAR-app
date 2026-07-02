@@ -1,21 +1,94 @@
 ﻿diff --git a/node_modules/react-native-ar-viewer/android/build.gradle b/node_modules/react-native-ar-viewer/android/build.gradle
-index d2de9d2..a295c32 100644
+index 9267238..a295c32 100644
 --- a/node_modules/react-native-ar-viewer/android/build.gradle
 +++ b/node_modules/react-native-ar-viewer/android/build.gradle
-@@ -72,7 +72,10 @@ dependencies {
+@@ -1,33 +1,44 @@
+ buildscript {
+   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
+   def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["ArViewer_kotlinVersion"]
++
+   repositories {
+     google()
+     mavenCentral()
+   }
++
+   dependencies {
+     classpath 'com.android.tools.build:gradle:7.2.1'
+     // noinspection DifferentKotlinGradleVersion
+     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+   }
+ }
++
+ def isNewArchitectureEnabled() {
+   return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
+ }
++
+ apply plugin: "com.android.library"
+ apply plugin: "kotlin-android"
++
++
+ def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
++
+ if (isNewArchitectureEnabled()) {
+   apply plugin: "com.facebook.react"
+ }
++
+ def getExtOrDefault(name) {
+   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["ArViewer_" + name]
+ }
++
+ def getExtOrIntegerDefault(name) {
+   return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["ArViewer_" + name]).toInteger()
+ }
++
+ android {
+   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
++
+   defaultConfig {
+     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
+     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
+@@ -38,28 +49,35 @@ android {
+       minifyEnabled false
+     }
+   }
++
+   lintOptions {
+     disable "GradleCompatible"
+   }
++
+   compileOptions {
+     sourceCompatibility JavaVersion.VERSION_1_8
+     targetCompatibility JavaVersion.VERSION_1_8
+   }
++
+ }
++
+ repositories {
+   mavenCentral()
+   google()
+ }
++
+ def kotlin_version = getExtOrDefault("kotlinVersion")
++
+ dependencies {
    //noinspection GradleDynamicVersion
    implementation "com.facebook.react:react-native:+"
    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 -  implementation "com.gorisse.thomas.sceneform:sceneform:1.21.0"
+-  implementation "com.gorisse.thomas.sceneform:sceneform:1.21.0"
+-  implementation ""
+-  implementation ""
 +  implementation "io.github.sceneview:sceneview:2.3.0"
 +  implementation "io.github.sceneview:arsceneview:2.3.0"
 +  implementation "androidx.activity:activity-ktx:1.8.2"
 +  implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
  }
- 
++
  if (isNewArchitectureEnabled()) {
+   react {
+     jsRootDir = file("../src/")
 diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
-index 882495e..7659cb2 100644
+index 882495e..1cd0eb2 100644
 --- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
 +++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
 @@ -4,7 +4,6 @@ import android.app.Activity
@@ -26,7 +99,7 @@ index 882495e..7659cb2 100644
  import android.os.Handler
  import android.os.Looper
  import android.util.AttributeSet
-@@ -15,757 +14,531 @@ import android.view.GestureDetector.SimpleOnGestureListener
+@@ -15,757 +14,626 @@ import android.view.GestureDetector.SimpleOnGestureListener
  import android.view.MotionEvent
  import android.view.PixelCopy
  import android.view.ViewGroup
@@ -39,13 +112,7 @@ index 882495e..7659cb2 100644
 -import com.google.android.filament.utils.Float3
 -import com.google.ar.core.*
 +import com.google.ar.core.ArCoreApk
-+import com.google.ar.core.Config
-+import com.google.ar.core.Frame
-+import com.google.ar.core.HitResult
-+import com.google.ar.core.Plane
-+import com.google.ar.core.Pose
-+import com.google.ar.core.Session
-+import com.google.ar.core.TrackingState
++import com.google.ar.core.ArCoreApk.Availability
  import com.google.ar.core.ArCoreApk.InstallStatus
 -import com.google.ar.core.exceptions.UnavailableException
 -import com.google.ar.sceneform.*
@@ -57,6 +124,11 @@ index 882495e..7659cb2 100644
 -import com.google.ar.sceneform.ux.FootprintSelectionVisualizer
 -import com.google.ar.sceneform.ux.TransformableNode
 -import com.google.ar.sceneform.ux.TransformationSystem
++import com.google.ar.core.Config
++import com.google.ar.core.Frame
++import com.google.ar.core.Plane
++import com.google.ar.core.Pose
++import com.google.ar.core.TrackingState
 +import io.github.sceneview.ar.ARSceneView
 +import io.github.sceneview.ar.arcore.isTracking
 +import io.github.sceneview.ar.node.AnchorNode
@@ -70,7 +142,6 @@ index 882495e..7659cb2 100644
 -
 +import java.io.File
 +import java.io.FileOutputStream
-+import java.util.concurrent.Executors
  
 +/**
 + * AR house viewer using SceneView (Filament glTF loader) instead of Sceneform ModelRenderable.
@@ -112,6 +183,8 @@ index 882495e..7659cb2 100644
 +  private var anchorNode: AnchorNode? = null
 +  private var modelInstance: ModelInstance? = null
 +  private var modelLoadPath: String? = null
++  private var pendingModelSrc: String? = null
++  private var arInitScheduled = false
 +
    private var installRequested = false
 -  /**
@@ -158,7 +231,11 @@ index 882495e..7659cb2 100644
 -  /**
 -   * Instructions controller initialization
 -   */
--  private var instructionsController: InstructionsController? = null
++  private var modelSrc: String = ""
++  private var modelGroundOffsetY: Float = 0f
++  private var allowTransform = mutableSetOf<String>()
++
+   private var instructionsController: InstructionsController? = null
 -  /**
 -   * Transformation system initialization
 -   */
@@ -166,24 +243,23 @@ index 882495e..7659cb2 100644
 -  /**
 -   * Gesture detector initialization
 -   */
--  private var gestureDetector: GestureDetector? = null
--
+   private var gestureDetector: GestureDetector? = null
++  private val mainHandler = Handler(Looper.getMainLooper())
+ 
 -  /**
 -   * Reminder to keep source of model loading
 -   */
-   private var modelSrc: String = ""
+-  private var modelSrc: String = ""
 -  /**
 -   * Set of allowed model transformations (rotate, scale, translate...)
 -   */
-+  private var modelGroundOffsetY: Float = 0f
-   private var allowTransform = mutableSetOf<String>()
+-  private var allowTransform = mutableSetOf<String>()
++  override fun onAttachedToWindow() {
++    super.onAttachedToWindow()
++    scheduleInitializeArView()
++  }
  
-+  private var instructionsController: InstructionsController? = null
-+  private var gestureDetector: GestureDetector? = null
-+  private val loadExecutor = Executors.newSingleThreadExecutor()
-+  private val mainHandler = Handler(Looper.getMainLooper())
-+
-   init {
+-  init {
 -    if (checkIsSupportedDevice(context.currentActivity!!)) {
 -      // check AR Core installation
 -      if (requestInstall()) {
@@ -244,17 +320,18 @@ index 882495e..7659cb2 100644
 -      }
 -    } else {
 -      isDeviceSupported = false
--    }
-+    initializeArView(context as ThemedReactContext)
++  private fun scheduleInitializeArView() {
++    if (arView != null || arInitScheduled) {
++      return
+     }
++    arInitScheduled = true
++    post { tryInitializeArView() }
    }
  
 -  private fun resume() {
 -    if (isStarted) {
-+  private fun initializeArView(context: ThemedReactContext) {
-+    val activity = context.currentActivity as? ComponentActivity
-+    if (activity == null || !checkIsSupportedDevice(activity)) {
-+      isDeviceSupported = false
-+      returnErrorEvent("Device or activity not supported for AR")
++  private fun tryInitializeArView() {
++    if (arView != null) {
        return
      }
 -    if ((context as ThemedReactContext).currentActivity != null) {
@@ -268,7 +345,12 @@ index 882495e..7659cb2 100644
 -      if (!sessionInitializationFailed) {
 -        instructionsController?.setVisible(true)
 -      }
--    }
++
++    val reactContext = context as? ThemedReactContext
++    if (reactContext == null) {
++      arInitScheduled = false
++      return
+     }
 -  }
  
 -  /**
@@ -282,9 +364,11 @@ index 882495e..7659cb2 100644
 -  private fun initializeSession() {
 -    // Only try once
 -    if (sessionInitializationFailed) {
-+    if (requestInstall(activity)) {
-+      returnErrorEvent("ARCore installation required")
-+      isDeviceSupported = false
++    val activity = reactContext.currentActivity
++    if (activity == null) {
++      Log.d("ARview session", "Activity not ready yet, retrying AR init")
++      arInitScheduled = false
++      mainHandler.postDelayed({ scheduleInitializeArView() }, 250)
        return
      }
 -    // if we have the camera permission, create the session
@@ -301,37 +385,7 @@ index 882495e..7659cb2 100644
 -          id,
 -          "onStarted",
 -          event
-+
-+    try {
-+      arView = ARSceneView(
-+        context = context,
-+        sharedActivity = activity,
-+        sharedLifecycle = activity.lifecycle,
-+        sessionConfiguration = { _, config -> applySessionConfig(config) },
-+        onSessionCreated = { sendStartedEvent() },
-+        onSessionFailed = { returnErrorEvent(it.message ?: "AR session failed") },
-+        onSessionUpdated = { _, frame -> onArFrame(frame) }
-+      ).also { view ->
-+        view.layoutParams = LayoutParams(
-+          ViewGroup.LayoutParams.MATCH_PARENT,
-+          ViewGroup.LayoutParams.MATCH_PARENT
-         )
-+        view.planeRenderer.isEnabled = true
-+        view.planeRenderer.isVisible = true
-+        addView(view)
-+      }
-+
-+      gestureDetector = GestureDetector(
-+        context,
-+        object : SimpleOnGestureListener() {
-+          override fun onSingleTapUp(e: MotionEvent): Boolean {
-+            onSingleTap(e)
-+            return true
-+          }
-+
-+          override fun onDown(e: MotionEvent): Boolean = true
-+        }
-+      )
+-        )
  
 -        return
 -      } catch (e: UnavailableException) {
@@ -339,22 +393,18 @@ index 882495e..7659cb2 100644
 -      } catch (e: java.lang.Exception) {
 -        sessionException = UnavailableException()
 -        sessionException.initCause(e)
-+      arView!!.setOnTouchListener { _, event ->
-+        gestureDetector?.onTouchEvent(event)
-+        false
-       }
-+
-+      instructionsController = InstructionsController(context, this)
-+      instructionsController!!.setEnabled(isInstructionsEnabled)
-+    } catch (e: Exception) {
-       sessionInitializationFailed = true
+-      }
+-      sessionInitializationFailed = true
 -      returnErrorEvent(sessionException?.message)
 -    } else {
 -      returnErrorEvent("Missing camera permissions")
-+      returnErrorEvent("Could not create AR view: ${e.message}")
++    if (activity !is ComponentActivity) {
 +      isDeviceSupported = false
++      arInitScheduled = false
++      returnErrorEvent("Activity must extend ComponentActivity for AR")
++      return
      }
-   }
+-  }
  
 -  /**
 -   * Removed the focus listener
@@ -365,14 +415,12 @@ index 882495e..7659cb2 100644
 -      arView!!.session?.close()
 -      arView!!.destroy()
 -      arView!!.viewTreeObserver.removeOnWindowFocusChangeListener(onFocusListener)
--    }
-+  private fun applySessionConfig(config: Config) {
-+    updatePlaneDetection(config)
-+    updateLightEstimation(config)
-+    updateDepthManagement(config)
-+    config.focusMode = Config.FocusMode.AUTO
-+    config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-   }
++    if (!checkIsSupportedDevice(activity)) {
++      isDeviceSupported = false
++      arInitScheduled = false
++      return
+     }
+-  }
  
 -  /**
 -   * Occurs when a session configuration has changed.
@@ -382,8 +430,13 @@ index 882495e..7659cb2 100644
 -      config.planeFindingMode !== Config.PlaneFindingMode.DISABLED
 -    )
 -  }
-+  private fun onArFrame(frame: Frame) {
-+    val view = arView ?: return
++    if (!CameraPermissionHelper.hasCameraPermission(activity)) {
++      Log.d("ARview session", "Camera permission missing, requesting")
++      CameraPermissionHelper.requestCameraPermission(activity)
++      arInitScheduled = false
++      mainHandler.postDelayed({ scheduleInitializeArView() }, 500)
++      return
++    }
  
 -  /**
 -   * Creates the transformation system used by this view.
@@ -413,36 +466,26 @@ index 882495e..7659cb2 100644
 -        val syntheticHitResult = HitTestResult()
 -        syntheticHitResult.node = modelNode
 -        syntheticHitResult
-+    if (instructionsController != null) {
-+      val hasTrackedPlane = frame.getUpdatedTrackables(Plane::class.java)
-+        .any { it.trackingState == TrackingState.TRACKING }
-+      val showPlaneInstructions = !hasTrackedPlane
-+      if (instructionsController?.isVisible() != showPlaneInstructions) {
-+        instructionsController?.setVisible(showPlaneInstructions)
-       }
+-      }
 -      transformationSystem!!.onTouch(effectiveHitResult, motionEvent)
 -    } else {
 -      // Normal hit-testing for placement and direct model interaction
 -      transformationSystem!!.onTouch(hitTestResult, motionEvent)
++    if (!ensureArCoreReady(activity)) {
++      arInitScheduled = false
++      return
      }
 -    
 -    if (hitTestResult.node == null && motionEvent != null) {
 -      gestureDetector!!.onTouchEvent(motionEvent)
 +
-+    keepFeetOnSurface()
++    createArSceneView(reactContext, activity)
++    arInitScheduled = false
 +
-+    if (!isInstantPlacementEnabled || modelInstance == null || anchorNode != null) {
-+      return
++    pendingModelSrc?.let { src ->
++      pendingModelSrc = null
++      loadModel(src)
      }
-+    if (frame.camera.trackingState != TrackingState.TRACKING) {
-+      return
-+    }
-+
-+    val pos = floatArrayOf(0f, 0f, -1f)
-+    val rotation = floatArrayOf(0f, 0f, 0f, 1f)
-+    val anchor = view.session?.createAnchor(Pose(pos, rotation)) ?: return
-+    attachModelToAnchor(anchor)
-+    onModelPlaced()
    }
  
 -  /**
@@ -456,44 +499,79 @@ index 882495e..7659cb2 100644
 -      if (instructionsController?.isVisible() != showPlaneInstructions) {
 -        instructionsController?.setVisible(
 -          showPlaneInstructions
--        )
--      }
-+  private fun onSingleTap(event: MotionEvent) {
-+    val view = arView ?: return
-+    if (modelInstance == null || view.frame == null) {
-+      return
-+    }
-+    if (view.frame?.camera?.trackingState != TrackingState.TRACKING) {
-+      return
-     }
++  private fun createArSceneView(reactContext: ThemedReactContext, activity: ComponentActivity) {
++    try {
++      arView = ARSceneView(
++        context = activity,
++        sharedActivity = activity,
++        sharedLifecycle = activity.lifecycle,
++        sessionConfiguration = { _, config -> applySessionConfig(config) },
++        onSessionCreated = { sendStartedEvent() },
++        onSessionFailed = { error ->
++          Log.e("ARview session", "SceneView session failed", error)
++          sessionInitializationFailed = true
++          val message = when {
++            error.message?.contains("camera", ignoreCase = true) == true ->
++              "Missing camera permissions"
++            error.message?.contains("install", ignoreCase = true) == true ->
++              "Please install or update Google Play Services for AR"
++            else -> error.message ?: "AR session failed"
++          }
++          returnErrorEvent(message)
++        },
++        onSessionUpdated = { _, frame -> onArFrame(frame) }
++      ).also { view ->
++        view.layoutParams = LayoutParams(
++          ViewGroup.LayoutParams.MATCH_PARENT,
++          ViewGroup.LayoutParams.MATCH_PARENT
+         )
++        view.planeRenderer.isEnabled = true
++        view.planeRenderer.isVisible = true
++        addView(view)
+       }
+-    }
  
 -    if (isInstantPlacementEnabled && arView!!.arFrame?.camera?.trackingState == TrackingState.TRACKING) {
 -      // Check if there is already an anchor
 -      if (modelNode?.parent is AnchorNode) {
 -        return
--      }
-+    val planeTypes = getPlaneTypesSet()
-+    if (planeTypes.isEmpty()) {
-+      return
-+    }
++      gestureDetector = GestureDetector(
++        reactContext,
++        object : SimpleOnGestureListener() {
++          override fun onSingleTapUp(e: MotionEvent): Boolean {
++            onSingleTap(e)
++            return true
++          }
++
++          override fun onDown(e: MotionEvent): Boolean = true
++        }
++      )
++
++      arView!!.setOnTouchListener { _, event ->
++        gestureDetector?.onTouchEvent(event)
++        false
+       }
  
 -      // Create the Anchor.
 -      val pos = floatArrayOf(0f, 0f, -1f)
 -      val rotation = floatArrayOf(0f, 0f, 0f, 1f)
 -      val anchor: Anchor = arView!!.session!!.createAnchor(Pose(pos, rotation))
 -      initAnchorNode(anchor)
-+    val hit = view.hitTestAR(
-+      xPx = event.x,
-+      yPx = event.y,
-+      planeTypes = planeTypes,
-+      planePoseInPolygon = true
-+    ) ?: return
++      if (instructionsController == null) {
++        instructionsController = InstructionsController(reactContext, this)
++        instructionsController!!.setEnabled(isInstructionsEnabled)
++      }
  
 -      // tells JS that the model is visible
-+    val alreadyPlaced = anchorNode != null
-+    attachModelToAnchor(hit.createAnchor())
-+    if (!alreadyPlaced) {
-       onModelPlaced()
+-      onModelPlaced()
++      isDeviceSupported = true
++      sessionInitializationFailed = false
++      Log.d("ARview session", "ARSceneView created")
++    } catch (e: Exception) {
++      sessionInitializationFailed = true
++      isDeviceSupported = false
++      Log.e("ARview session", "Could not create ARSceneView", e)
++      returnErrorEvent("Could not create AR view: ${e.message}")
      }
    }
  
@@ -524,30 +602,72 @@ index 882495e..7659cb2 100644
 -              }
 -              break
 -            }
--          }
--        }
--      }
--    }
--  }
-+  private fun attachModelToAnchor(anchor: com.google.ar.core.Anchor) {
-+    val view = arView ?: return
-+    val instance = modelInstance ?: return
++  /** Prefer checkAvailability; only prompt install when ARCore is actually missing or outdated. */
++  private fun ensureArCoreReady(activity: Activity): Boolean {
++    return when (ArCoreApk.getInstance().checkAvailability(activity)) {
++      Availability.SUPPORTED_INSTALLED -> true
++      Availability.UNKNOWN_CHECKING -> {
++        Log.d("ARview session", "ARCore availability still checking")
++        mainHandler.postDelayed({ scheduleInitializeArView() }, 200)
++        false
++      }
++      Availability.UNKNOWN_TIMED_OUT -> {
++        returnErrorEvent("Timed out checking ARCore availability")
++        false
++      }
++      Availability.SUPPORTED_APK_TOO_OLD,
++      Availability.SUPPORTED_NOT_INSTALLED -> {
++        when (ArCoreApk.getInstance().requestInstall(activity, !installRequested)) {
++          InstallStatus.INSTALLED -> true
++          InstallStatus.INSTALL_REQUESTED -> {
++            installRequested = true
++            returnErrorEvent("Please install or update Google Play Services for AR, then return to the app")
++            mainHandler.postDelayed({ scheduleInitializeArView() }, 1000)
++            false
+           }
+         }
+       }
++      else -> {
++        isDeviceSupported = false
++        returnErrorEvent("This device does not support ARCore")
++        false
++      }
+     }
+   }
  
 -  private fun initAnchorNode(anchor: Anchor) {
 -    val anchorNode = AnchorNode(anchor)
-+    detachCurrentAnchor()
++  private fun applySessionConfig(config: Config) {
++    updatePlaneDetection(config)
++    updateLightEstimation(config)
++    updateDepthManagement(config)
++    config.focusMode = Config.FocusMode.AUTO
++    config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
++  }
++
++  private fun onArFrame(frame: Frame) {
++    val view = arView ?: return
++
++    if (instructionsController != null) {
++      val hasTrackedPlane = frame.getUpdatedTrackables(Plane::class.java)
++        .any { it.trackingState == TrackingState.TRACKING }
++      val showPlaneInstructions = !hasTrackedPlane
++      if (instructionsController?.isVisible() != showPlaneInstructions) {
++        instructionsController?.setVisible(showPlaneInstructions)
++      }
++    }
  
 -    anchorNode.parent = arView!!.scene
 -    modelNode!!.parent = anchorNode
-+    val scale = getModuleScale(modelSrc)
-+    val node = ModelNode(modelInstance = instance, autoAnimate = true)
-+    applyModelTransform(node, scale)
++    keepFeetOnSurface()
  
 -    // Animate if has animation
 -    val renderableInstance = modelNode?.renderableInstance
 -    if (renderableInstance != null && renderableInstance.hasAnimations()) {
 -      renderableInstance.animate(true).start()
--    }
++    if (!isInstantPlacementEnabled || modelInstance == null || anchorNode != null) {
++      return
+     }
 -    
 -    // CRITICAL: Re-select model after placement so gestures continue to work
 -    // The model was deselected in onSingleTap() to allow placement, but we need it selected for gestures
@@ -556,25 +676,10 @@ index 882495e..7659cb2 100644
 -      modelNode!!.select()
 -      // Re-apply transforms to ensure controllers are enabled
 -      onTransformChanged()
-+    val anchorNode = AnchorNode(view.engine, anchor)
-+    anchorNode.addChildNode(node)
-+    view.addChildNode(anchorNode)
-+
-+    this.anchorNode = anchorNode
-+    this.modelNode = node
-+    onTransformChanged()
-+    Log.d("ARview model", "Model attached to anchor (SceneView loader)")
-+  }
-+
-+  private fun detachCurrentAnchor() {
-+    val view = arView ?: return
-+    anchorNode?.let { node ->
-+      view.removeChildNode(node)
-+      node.destroy()
++    if (frame.camera.trackingState != TrackingState.TRACKING) {
++      return
      }
-+    anchorNode = null
-+    modelNode = null
-   }
+-  }
  
 -  private fun onModelPlaced() {
 -    val event = Arguments.createMap()
@@ -583,21 +688,12 @@ index 882495e..7659cb2 100644
 -      id,
 -      "onModelPlaced",
 -      event
-+  private fun applyModelTransform(node: ModelNode, scale: Float) {
-+    val center = node.center
-+    val halfExtent = node.halfExtent
-+    modelGroundOffsetY = center.y - halfExtent.y
-+
-+    val posX = -center.x
-+    val posZ = -center.z
-+    node.scale = Scale(scale, scale, scale)
-+    node.position = Position(posX, -modelGroundOffsetY * scale, posZ)
-+
-+    applyScaleLimits(scale)
-+    Log.d(
-+      "ARview scale",
-+      "Applied transform scale=$scale groundOffsetY=$modelGroundOffsetY pos=($posX, ${-modelGroundOffsetY * scale}, $posZ)"
-     )
+-    )
++    val pos = floatArrayOf(0f, 0f, -1f)
++    val rotation = floatArrayOf(0f, 0f, 0f, 1f)
++    val anchor = view.session?.createAnchor(Pose(pos, rotation)) ?: return
++    attachModelToAnchor(anchor)
++    onModelPlaced()
    }
  
 -  /**
@@ -610,16 +706,16 @@ index 882495e..7659cb2 100644
 -        return true
 -      }
 -      InstallStatus.INSTALLED -> {}
-+  private fun keepFeetOnSurface() {
-+    val node = modelNode ?: return
-+    val s = node.scale.x
-+    val pos = node.position
-+    val targetY = -modelGroundOffsetY * s
-+    if (kotlin.math.abs(pos.y - targetY) > 0.0001f) {
-+      node.position = Position(pos.x, targetY, pos.z)
++  private fun onSingleTap(event: MotionEvent) {
++    val view = arView ?: return
++    if (modelInstance == null || view.frame == null) {
++      return
++    }
++    if (view.frame?.camera?.trackingState != TrackingState.TRACKING) {
++      return
      }
 -    return false
-   }
+-  }
  
 -  /**
 -   * Set plane detection orientation
@@ -629,32 +725,11 @@ index 882495e..7659cb2 100644
 -    sessionConfig.let {
 -      updatePlaneDetection(sessionConfig)
 -      updateConfig()
-+  private fun getModuleScale(modelSrc: String): Float {
-+    val is6ModuleHouse = modelSrc.contains("6 Module", ignoreCase = true) ||
-+      modelSrc.contains("6Module", ignoreCase = true) ||
-+      modelSrc.contains("6-Module", ignoreCase = true) ||
-+      (modelSrc.contains("Module") && modelSrc.contains("6"))
-+    val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true) ||
-+      modelSrc.contains("4Module", ignoreCase = true) ||
-+      modelSrc.contains("4-Module", ignoreCase = true) ||
-+      (modelSrc.contains("Module") && modelSrc.contains("4") && !is6ModuleHouse)
-+    val is2ModuleHouse = modelSrc.contains("2 Module", ignoreCase = true) ||
-+      modelSrc.contains("2Module", ignoreCase = true) ||
-+      modelSrc.contains("2-Module", ignoreCase = true) ||
-+      (modelSrc.contains("Module") && modelSrc.contains("2") && !is4ModuleHouse && !is6ModuleHouse)
-+    val is1ModuleHouse = modelSrc.contains("1 Module", ignoreCase = true) ||
-+      modelSrc.contains("1Module", ignoreCase = true) ||
-+      modelSrc.contains("1-Module", ignoreCase = true) ||
-+      (modelSrc.contains("Module") && modelSrc.contains("1") && !is2ModuleHouse && !is4ModuleHouse && !is6ModuleHouse)
-+
-+    return when {
-+      is6ModuleHouse -> 0.18f
-+      is4ModuleHouse -> 0.22f
-+      is2ModuleHouse -> 0.28f
-+      is1ModuleHouse -> 0.3f
-+      else -> 0.3f
++    val planeTypes = getPlaneTypesSet()
++    if (planeTypes.isEmpty()) {
++      return
      }
-   }
+-  }
  
 -  private fun updatePlaneDetection(config: Config?) {
 -    when (planeOrientationMode) {
@@ -686,11 +761,18 @@ index 882495e..7659cb2 100644
 -          modelNode!!.translationController.allowedPlaneTypes.clear()
 -        }
 -      }
--    }
-+  private fun applyScaleLimits(initialScale: Float) {
-+    val minScale = 0.06f
-+    val maxScale = maxOf(initialScale * 8f, 1.2f)
-+    Log.d("ARview scale", "Scale limits (gesture clamp TBD): min=$minScale max=$maxScale initial=$initialScale")
++    val hit = view.hitTestAR(
++      xPx = event.x,
++      yPx = event.y,
++      planeTypes = planeTypes,
++      planePoseInPolygon = true
++    ) ?: return
++
++    val alreadyPlaced = anchorNode != null
++    attachModelToAnchor(hit.createAnchor())
++    if (!alreadyPlaced) {
++      onModelPlaced()
+     }
    }
  
 -  /**
@@ -698,6 +780,131 @@ index 882495e..7659cb2 100644
 -   */
 -  fun setInstantPlacementEnabled(isEnabled: Boolean) {
 -    isInstantPlacementEnabled = isEnabled
++  private fun attachModelToAnchor(anchor: com.google.ar.core.Anchor) {
++    val view = arView ?: return
++    val instance = modelInstance ?: return
++
++    detachCurrentAnchor()
++
++    val scale = getModuleScale(modelSrc)
++    val node = ModelNode(modelInstance = instance, autoAnimate = true)
++    applyModelTransform(node, scale)
++
++    val anchorNode = AnchorNode(view.engine, anchor)
++    anchorNode.addChildNode(node)
++    view.addChildNode(anchorNode)
++
++    this.anchorNode = anchorNode
++    this.modelNode = node
++    onTransformChanged()
++    Log.d("ARview model", "Model attached to anchor (SceneView loader)")
+   }
+ 
+-  /**
+-   * Set whether light estimation is enabled
+-   */
+-  fun setLightEstimationEnabled(isEnabled: Boolean) {
+-    isLightEstimationEnabled = isEnabled
+-    sessionConfig.let {
+-      updateLightEstimation(sessionConfig)
+-      updateConfig()
++  private fun detachCurrentAnchor() {
++    val view = arView ?: return
++    anchorNode?.let { node ->
++      view.removeChildNode(node)
++      node.destroy()
+     }
++    anchorNode = null
++    modelNode = null
+   }
+ 
+-  private fun updateLightEstimation(config: Config?) {
+-    if(!isLightEstimationEnabled) {
+-      config?.lightEstimationMode = Config.LightEstimationMode.DISABLED
+-    } else {
+-      config?.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
+-    }
++  private fun applyModelTransform(node: ModelNode, scale: Float) {
++    val center = node.center
++    val halfExtent = node.halfExtent
++    modelGroundOffsetY = center.y - halfExtent.y
++
++    val posX = -center.x
++    val posZ = -center.z
++    node.scale = Scale(scale, scale, scale)
++    node.position = Position(posX, -modelGroundOffsetY * scale, posZ)
++
++    applyScaleLimits(scale)
++    Log.d(
++      "ARview scale",
++      "Applied transform scale=$scale groundOffsetY=$modelGroundOffsetY pos=($posX, ${-modelGroundOffsetY * scale}, $posZ)"
++    )
+   }
+ 
+-  /**
+-   * Set whether depth management is enabled
+-   */
+-  fun setDepthManagementEnabled(isEnabled: Boolean) {
+-    isDepthManagementEnabled = isEnabled
+-    sessionConfig.let {
+-      updateDepthManagement(sessionConfig)
+-      updateConfig()
++  private fun keepFeetOnSurface() {
++    val node = modelNode ?: return
++    val s = node.scale.x
++    val pos = node.position
++    val targetY = -modelGroundOffsetY * s
++    if (kotlin.math.abs(pos.y - targetY) > 0.0001f) {
++      node.position = Position(pos.x, targetY, pos.z)
+     }
+   }
+ 
+-  private fun updateDepthManagement(config: Config?) {
+-    if (!isDepthManagementEnabled) {
+-      sessionConfig?.depthMode = Config.DepthMode.DISABLED
+-      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED
+-    } else {
+-      if(arSession?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true) {
+-        sessionConfig?.depthMode = Config.DepthMode.AUTOMATIC
+-      }
+-      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_ENABLED
++  private fun getModuleScale(modelSrc: String): Float {
++    val is6ModuleHouse = modelSrc.contains("6 Module", ignoreCase = true) ||
++      modelSrc.contains("6Module", ignoreCase = true) ||
++      modelSrc.contains("6-Module", ignoreCase = true) ||
++      (modelSrc.contains("Module") && modelSrc.contains("6"))
++    val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true) ||
++      modelSrc.contains("4Module", ignoreCase = true) ||
++      modelSrc.contains("4-Module", ignoreCase = true) ||
++      (modelSrc.contains("Module") && modelSrc.contains("4") && !is6ModuleHouse)
++    val is2ModuleHouse = modelSrc.contains("2 Module", ignoreCase = true) ||
++      modelSrc.contains("2Module", ignoreCase = true) ||
++      modelSrc.contains("2-Module", ignoreCase = true) ||
++      (modelSrc.contains("Module") && modelSrc.contains("2") && !is4ModuleHouse && !is6ModuleHouse)
++    val is1ModuleHouse = modelSrc.contains("1 Module", ignoreCase = true) ||
++      modelSrc.contains("1Module", ignoreCase = true) ||
++      modelSrc.contains("1-Module", ignoreCase = true) ||
++      (modelSrc.contains("Module") && modelSrc.contains("1") && !is2ModuleHouse && !is4ModuleHouse && !is6ModuleHouse)
++
++    return when {
++      is6ModuleHouse -> 0.18f
++      is4ModuleHouse -> 0.22f
++      is2ModuleHouse -> 0.28f
++      is1ModuleHouse -> 0.3f
++      else -> 0.3f
+     }
+   }
+ 
+-  private fun updateConfig() {
+-    if (isStarted) {
+-      arSession?.configure(sessionConfig)
+-    }
++  private fun applyScaleLimits(initialScale: Float) {
++    val minScale = 0.06f
++    val maxScale = maxOf(initialScale * 8f, 1.2f)
++    Log.d("ARview scale", "Scale limits (gesture clamp TBD): min=$minScale max=$maxScale initial=$initialScale")
++  }
++
 +  private fun getPlaneTypesSet(): Set<Plane.Type> = when (planeOrientationMode) {
 +    "horizontal" -> setOf(
 +      Plane.Type.HORIZONTAL_UPWARD_FACING,
@@ -710,80 +917,22 @@ index 882495e..7659cb2 100644
 +      Plane.Type.VERTICAL
 +    )
 +    else -> emptySet()
-   }
- 
--  /**
--   * Set whether light estimation is enabled
--   */
--  fun setLightEstimationEnabled(isEnabled: Boolean) {
--    isLightEstimationEnabled = isEnabled
--    sessionConfig.let {
--      updateLightEstimation(sessionConfig)
--      updateConfig()
--    }
++  }
++
 +  fun onDrop() {
-+    loadExecutor.shutdownNow()
 +    detachCurrentAnchor()
 +    modelInstance = null
 +    modelLoadPath = null
++    pendingModelSrc = null
++    arInitScheduled = false
 +    arView?.destroy()
 +    arView = null
    }
  
--  private fun updateLightEstimation(config: Config?) {
--    if(!isLightEstimationEnabled) {
--      config?.lightEstimationMode = Config.LightEstimationMode.DISABLED
--    } else {
--      config?.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
-+  fun loadModel(src: String) {
-+    if (!isDeviceSupported) {
-+      return
-     }
--  }
- 
--  /**
--   * Set whether depth management is enabled
--   */
--  fun setDepthManagementEnabled(isEnabled: Boolean) {
--    isDepthManagementEnabled = isEnabled
--    sessionConfig.let {
--      updateDepthManagement(sessionConfig)
--      updateConfig()
-+    if (anchorNode != null) {
-+      detachCurrentAnchor()
-+      val event = Arguments.createMap()
-+      (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
-+        .receiveEvent(id, "onModelRemoved", event)
-     }
--  }
- 
--  private fun updateDepthManagement(config: Config?) {
--    if (!isDepthManagementEnabled) {
--      sessionConfig?.depthMode = Config.DepthMode.DISABLED
--      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED
--    } else {
--      if(arSession?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true) {
--        sessionConfig?.depthMode = Config.DepthMode.AUTOMATIC
--      }
--      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_ENABLED
--    }
--  }
-+    modelSrc = src
-+    isLoading = true
-+    Log.d("ARview model", "Loading with SceneView: $src")
- 
--  private fun updateConfig() {
--    if (isStarted) {
--      arSession?.configure(sessionConfig)
--    }
--  }
-+    val loadPath = resolveModelPath(src)
-+    modelLoadPath = loadPath
- 
 -  /**
 -   * Start the loading of a GLB model URI
 -   */
--  fun loadModel(src: String) {
+   fun loadModel(src: String) {
 -    if (isDeviceSupported) {
 -      if (modelNode?.parent is AnchorNode) {
 -        Log.d("ARview model", "detaching")
@@ -797,7 +946,48 @@ index 882495e..7659cb2 100644
 -          "onModelRemoved",
 -          event
 -        )
--      }
++    modelSrc = src
++
++    if (arView == null) {
++      pendingModelSrc = src
++      scheduleInitializeArView()
++      return
++    }
++
++    if (!isDeviceSupported) {
++      pendingModelSrc = src
++      scheduleInitializeArView()
++      return
++    }
++
++    if (anchorNode != null) {
++      detachCurrentAnchor()
++      val event = Arguments.createMap()
++      (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
++        .receiveEvent(id, "onModelRemoved", event)
++    }
++
++    modelSrc = src
++    isLoading = true
++    Log.d("ARview model", "Loading with SceneView: $src")
++
++    val loadPath = resolveModelPath(src)
++    modelLoadPath = loadPath
++
++    // Filament model loading must run on the main thread.
++    mainHandler.post {
++      try {
++        val view = arView ?: throw IllegalStateException("AR view not ready")
++        val instance = view.modelLoader.createModelInstance(loadPath)
++        modelInstance = instance
++        isLoading = false
++        Log.d("ARview model", "SceneView model loaded from $loadPath")
++        onTransformChanged()
++      } catch (e: Exception) {
++        Log.e("ARview model", "SceneView load failed", e)
++        isLoading = false
++        returnErrorEvent("Cannot load the model: ${e.message}")
+       }
 -      Log.d("ARview model", "loading")
 -      modelSrc = src
 -      isLoading = true
@@ -845,39 +1035,30 @@ index 882495e..7659cb2 100644
 -
 -          Log.d("ARview model", "loaded and selected for gestures")
 -          isLoading = false
-+    loadExecutor.execute {
-+      try {
-+        val view = arView ?: throw IllegalStateException("AR view not ready")
-+        val instance = view.modelLoader.createModelInstance(loadPath)
-+          ?: throw IllegalStateException("ModelLoader returned null for $loadPath")
- 
+-
 -          // set transforms on model - ensure controllers are enabled after model is fully initialized
 -          // This is critical: model must be selected and renderable before enabling gestures
-+        mainHandler.post {
-+          modelInstance = instance
-+          isLoading = false
-+          Log.d("ARview model", "SceneView model loaded from $loadPath")
-           onTransformChanged()
+-          onTransformChanged()
 -          
 -          // Log transform state for debugging
 -          Log.d("ARview transforms", "scale: ${allowTransform.contains("scale")}, rotate: ${allowTransform.contains("rotate")}, translate: ${allowTransform.contains("translate")}")
 -          Log.d("ARview controllers", "scaleEnabled: ${modelNode!!.scaleController.isEnabled}, rotateEnabled: ${modelNode!!.rotationController.isEnabled}, translateEnabled: ${modelNode!!.translationController.isEnabled}")
 -          Log.d("ARview selection", "Model selected: ${modelNode!!.isSelected}, collision: ${modelNode!!.collisionShape != null}")
-         }
+-        }
 -        .exceptionally {
 -          Log.e("ARview model", "cannot load")
 -          returnErrorEvent("Cannot load the model: " + it.message)
 -          return@exceptionally null
-+      } catch (e: Exception) {
-+        Log.e("ARview model", "SceneView load failed", e)
-+        mainHandler.post {
-+          isLoading = false
-+          returnErrorEvent("Cannot load the model: ${e.message}")
-         }
-+      }
-+    }
-+  }
-+
+-        }
+     }
+   }
+ 
+-  /**
+-   * Rotate the model with the requested angle
+-   */
+-  fun rotateModel(pitch: Number, yaw: Number, roll:Number) {
+-    Log.d("ARview rotateModel", "pitch: $pitch deg / yaw: $yaw deg / roll: $roll deg")
+-    modelNode?.localRotation = Quaternion.multiply(modelNode?.localRotation, Quaternion.eulerAngles(Vector3(pitch.toFloat(), yaw.toFloat(), roll.toFloat())))
 +  private fun resolveModelPath(src: String): String {
 +    if (src.startsWith("file://") || src.startsWith("http://") || src.startsWith("https://")) {
 +      return src
@@ -893,15 +1074,9 @@ index 882495e..7659cb2 100644
 +    } catch (e: Exception) {
 +      Log.w("ARview model", "Cache copy failed, using asset path: ${e.message}")
 +      src
-     }
-   }
- 
--  /**
--   * Rotate the model with the requested angle
--   */
--  fun rotateModel(pitch: Number, yaw: Number, roll:Number) {
--    Log.d("ARview rotateModel", "pitch: $pitch deg / yaw: $yaw deg / roll: $roll deg")
--    modelNode?.localRotation = Quaternion.multiply(modelNode?.localRotation, Quaternion.eulerAngles(Vector3(pitch.toFloat(), yaw.toFloat(), roll.toFloat())))
++    }
++  }
++
 +  fun rotateModel(pitch: Number, yaw: Number, roll: Number) {
 +    val node = modelNode ?: return
 +    val delta = Rotation(yaw.toFloat(), pitch.toFloat(), roll.toFloat())
@@ -966,6 +1141,16 @@ index 882495e..7659cb2 100644
 -    if (scaleEnabled && !modelNode!!.isSelected) {
 -      Log.d("ARview scale", "Model not selected, selecting for scale gestures")
 -      modelNode!!.select()
+-    }
+-    
+-    Log.d("ARview transforms", "Applied transforms - scale: $scaleEnabled, rotate: $rotateEnabled, translate: $translateEnabled")
+-    Log.d("ARview controllers", "scaleEnabled: ${modelNode!!.scaleController.isEnabled}, rotateEnabled: ${modelNode!!.rotationController.isEnabled}, translateEnabled: ${modelNode!!.translationController.isEnabled}")
+-    Log.d("ARview selection", "Model selected: ${modelNode!!.isSelected}")
+-  }
+-
+-  /**
+-   * Enable/Disable instructions
+-   */
 +
 +    node.isScaleEditable = scaleEnabled
 +    node.isRotationEditable = rotateEnabled
@@ -1022,16 +1207,9 @@ index 882495e..7659cb2 100644
 +      Config.DepthMode.AUTOMATIC
 +    } else {
 +      Config.DepthMode.DISABLED
-     }
--    
--    Log.d("ARview transforms", "Applied transforms - scale: $scaleEnabled, rotate: $rotateEnabled, translate: $translateEnabled")
--    Log.d("ARview controllers", "scaleEnabled: ${modelNode!!.scaleController.isEnabled}, rotateEnabled: ${modelNode!!.rotationController.isEnabled}, translateEnabled: ${modelNode!!.translationController.isEnabled}")
--    Log.d("ARview selection", "Model selected: ${modelNode!!.isSelected}")
-   }
- 
--  /**
--   * Enable/Disable instructions
--   */
++    }
++  }
++
    fun setInstructionsEnabled(isEnabled: Boolean) {
      isInstructionsEnabled = isEnabled
      instructionsController?.setEnabled(isInstructionsEnabled)
@@ -1126,17 +1304,6 @@ index 882495e..7659cb2 100644
 -    )
 +    (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
 +      .receiveEvent(id, "onError", event)
-+  }
-+
-+  private fun requestInstall(activity: Activity): Boolean {
-+    when (ArCoreApk.getInstance().requestInstall(activity, !installRequested)) {
-+      InstallStatus.INSTALL_REQUESTED -> {
-+        installRequested = true
-+        return true
-+      }
-+      InstallStatus.INSTALLED -> {}
-+    }
-+    return false
    }
  
 -  /**
@@ -1164,60 +1331,3 @@ index 882495e..7659cb2 100644
  }
 -
 -
-diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/HandMotionView.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/HandMotionView.kt
-index 30edfe8..982e9bc 100644
---- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/HandMotionView.kt
-+++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/HandMotionView.kt
-@@ -2,23 +2,22 @@ package com.reactnativearviewer
- 
- import android.content.Context
- import android.util.AttributeSet
-+import android.view.animation.AlphaAnimation
- import android.view.animation.Animation
- import android.widget.FrameLayout
- import androidx.appcompat.widget.AppCompatImageView
--import com.google.ar.sceneform.ux.HandMotionAnimation
- 
- class HandMotionView : AppCompatImageView {
--  private var animation: HandMotionAnimation? = null
--  private var container: FrameLayout? = null
-+  private var animation: Animation? = null
- 
-   constructor(context: Context?, container: FrameLayout?) : super(context!!) {
--    setupHandMotionAnimation(container)
-+    setupHandMotionAnimation()
-   }
- 
-   constructor(context: Context?, container: FrameLayout?, attrs: AttributeSet?) : super(
-     context!!, attrs
-   ) {
--    setupHandMotionAnimation(container)
-+    setupHandMotionAnimation()
-   }
- 
-   override fun onAttachedToWindow() {
-@@ -40,16 +39,16 @@ class HandMotionView : AppCompatImageView {
-     }
-   }
- 
--  private fun setupHandMotionAnimation(container: FrameLayout?) {
--    this.container = container
--    this.setImageResource(R.drawable.sceneform_hand_phone)
--    animation = HandMotionAnimation(container, this)
--    animation!!.repeatCount = Animation.INFINITE
--    animation!!.duration = ANIMATION_SPEED_MS
--    animation!!.startOffset = 1000
-+  private fun setupHandMotionAnimation() {
-+    val pulse = AlphaAnimation(0.35f, 1.0f)
-+    pulse.repeatCount = Animation.INFINITE
-+    pulse.repeatMode = Animation.REVERSE
-+    pulse.duration = ANIMATION_SPEED_MS
-+    pulse.startOffset = 500
-+    animation = pulse
-   }
- 
-   companion object {
--    private const val ANIMATION_SPEED_MS: Long = 2500
-+    private const val ANIMATION_SPEED_MS: Long = 1200
-   }
- }
