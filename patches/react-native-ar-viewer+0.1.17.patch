@@ -1,269 +1,1223 @@
+﻿diff --git a/node_modules/react-native-ar-viewer/android/build.gradle b/node_modules/react-native-ar-viewer/android/build.gradle
+index d2de9d2..a295c32 100644
+--- a/node_modules/react-native-ar-viewer/android/build.gradle
++++ b/node_modules/react-native-ar-viewer/android/build.gradle
+@@ -72,7 +72,10 @@ dependencies {
+   //noinspection GradleDynamicVersion
+   implementation "com.facebook.react:react-native:+"
+   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+-  implementation "com.gorisse.thomas.sceneform:sceneform:1.21.0"
++  implementation "io.github.sceneview:sceneview:2.3.0"
++  implementation "io.github.sceneview:arsceneview:2.3.0"
++  implementation "androidx.activity:activity-ktx:1.8.2"
++  implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+ }
+ 
+ if (isNewArchitectureEnabled()) {
 diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
-index 0000000..1111111 100644
+index 882495e..7659cb2 100644
 --- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
 +++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/ArViewerView.kt
-@@ -567,7 +567,15 @@ class ArViewerView : FrameLayout, LifecycleObserver {
-           }
-           
-           // CRITICAL: Set initial scale to ensure model is visible and fits on screen
--          // Models are often too large by default, especially larger houses
--          // Set a smaller initial scale (0.3x = 30% of original size) to make model fit on screen
--          // This ensures the model is visible and can be scaled up/down from there
--          modelNode!!.localScale = Vector3(0.3f, 0.3f, 0.3f)
--          Log.d("ARview scale", "Initial scale set to 0.3x for visibility")
-+          // Models are often too large by default, especially larger houses
-+          // 4 Module houses are particularly large, so they need smaller scale
-+          // Check if this is a 4 Module house by checking the model path
-+          // More robust check: look for "4 Module" in various formats
-+          val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true) || 
-+                               modelSrc.contains("4Module", ignoreCase = true) ||
-+                               modelSrc.contains("4-Module", ignoreCase = true) ||
-+                               (modelSrc.contains("Module") && modelSrc.contains("4"))
-+          Log.d("ARview scale", "is4ModuleHouse check result: $is4ModuleHouse (checked for '4 Module', '4Module', '4-Module', or 'Module' + '4')")
-+          val initialScale = if (is4ModuleHouse) {
-+            0.5f // 50% of original size for 4 Module houses (increased from 20% for visibility)
-+          } else {
-+            0.3f  // 30% of original size for other houses
-+          }
-+          Log.d("ARview scale", "About to set scale to: $initialScale")
-+          modelNode!!.localScale = Vector3(initialScale, initialScale, initialScale)
-+          val actualScale = modelNode!!.localScale
-+          Log.d("ARview scale", "Scale SET - Initial: ${initialScale}x, Actual after setting: x=${actualScale.x}, y=${actualScale.y}, z=${actualScale.z} for ${if (is4ModuleHouse) "4 Module house" else "regular house"}")
-+          
-+          // CRITICAL: Tell CustomScaleController about the initial scale so it can enforce min/max limits in real-time
-+          modelNode!!.scaleController.setInitialScale(initialScale)
-           
-           // CRITICAL: Select model AFTER setting renderable
-@@ -650,6 +658,12 @@ class ArViewerView : FrameLayout, LifecycleObserver {
-     modelNode!!.scaleController.isEnabled = scaleEnabled
-     modelNode!!.rotationController.isEnabled = rotateEnabled
-     // CRITICAL: Keep translationController enabled even if translation is disabled
-+    // This allows it to intercept drag gestures for rotation when translation is disabled
-+    // The CustomTranslationController will handle rotation logic internally
-     modelNode!!.translationController.isEnabled = translateEnabled || rotateEnabled
-     
-+    // CRITICAL: Tell CustomTranslationController whether translation is actually enabled
-+    // This allows it to distinguish between "enabled for rotation" vs "enabled for translation"
-+    val customTranslationController = modelNode!!.translationController as? com.reactnativearviewer.CustomTranslationController
-+    customTranslationController?.setTranslationEnabled(translateEnabled)
-+    
-+    // CRITICAL: Ensure model is selected for scale gestures to work
-+    // ScaleController requires the model to be selected to receive pinch gestures
-+    if (scaleEnabled && !modelNode!!.isSelected) {
-+      Log.d("ARview scale", "Model not selected, selecting for scale gestures")
-+      modelNode!!.select()
-+    }
-+    
-     Log.d("ARview transforms", "Applied transforms - scale: $scaleEnabled, rotate: $rotateEnabled, translate: $translateEnabled")
-+    Log.d("ARview controllers", "scaleEnabled: ${modelNode!!.scaleController.isEnabled}, rotateEnabled: ${modelNode!!.rotationController.isEnabled}, translateEnabled: ${modelNode!!.translationController.isEnabled}")
-+    Log.d("ARview selection", "Model selected: ${modelNode!!.isSelected}")
-   }
+@@ -4,7 +4,6 @@ import android.app.Activity
+ import android.app.ActivityManager
+ import android.content.Context
+ import android.graphics.Bitmap
+-import android.net.Uri
+ import android.os.Handler
+ import android.os.Looper
+ import android.util.AttributeSet
+@@ -15,757 +14,531 @@ import android.view.GestureDetector.SimpleOnGestureListener
+ import android.view.MotionEvent
+ import android.view.PixelCopy
+ import android.view.ViewGroup
+-import android.view.ViewTreeObserver.OnWindowFocusChangeListener
+ import android.widget.FrameLayout
++import androidx.activity.ComponentActivity
+ import com.facebook.react.bridge.Arguments
+ import com.facebook.react.uimanager.ThemedReactContext
+ import com.facebook.react.uimanager.events.RCTEventEmitter
+-import com.google.android.filament.utils.Float3
+-import com.google.ar.core.*
++import com.google.ar.core.ArCoreApk
++import com.google.ar.core.Config
++import com.google.ar.core.Frame
++import com.google.ar.core.HitResult
++import com.google.ar.core.Plane
++import com.google.ar.core.Pose
++import com.google.ar.core.Session
++import com.google.ar.core.TrackingState
+ import com.google.ar.core.ArCoreApk.InstallStatus
+-import com.google.ar.core.exceptions.UnavailableException
+-import com.google.ar.sceneform.*
+-import com.google.ar.sceneform.math.Quaternion
+-import com.google.ar.sceneform.math.Vector3
+-import com.google.ar.sceneform.rendering.CameraStream
+-import com.google.ar.sceneform.rendering.ModelRenderable
+-import com.google.ar.sceneform.ux.BaseArFragment.OnSessionConfigurationListener
+-import com.google.ar.sceneform.ux.FootprintSelectionVisualizer
+-import com.google.ar.sceneform.ux.TransformableNode
+-import com.google.ar.sceneform.ux.TransformationSystem
++import io.github.sceneview.ar.ARSceneView
++import io.github.sceneview.ar.arcore.isTracking
++import io.github.sceneview.ar.node.AnchorNode
++import io.github.sceneview.math.Position
++import io.github.sceneview.math.Rotation
++import io.github.sceneview.math.Scale
++import io.github.sceneview.model.ModelInstance
++import io.github.sceneview.node.ModelNode
+ import java.io.ByteArrayOutputStream
+-import java.util.*
+-
++import java.io.File
++import java.io.FileOutputStream
++import java.util.concurrent.Executors
  
-diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTranslationController.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTranslationController.kt
-index 0000000..2222222 100644
---- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTranslationController.kt
-+++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTranslationController.kt
-@@ -1,5 +1,6 @@
- package com.reactnativearviewer
- 
-+import android.util.Log
- import com.google.android.filament.utils.Float3
- import com.google.ar.core.*
- import com.google.ar.sceneform.*
-@@ -63,6 +64,13 @@ class CustomTranslationController(transformableNode: BaseTransformableNode?,
-     return super.isTransforming() || desiredLocalRotation != null || desiredLocalPosition != null
-   }
- 
-+  // Store whether translation is actually enabled (from allowTransform prop)
-+  private var translationActuallyEnabled = true
-+  
-+  fun setTranslationEnabled(enabled: Boolean) {
-+    translationActuallyEnabled = enabled
-+  }
-+  
-   override fun canStartTransformation(gesture: DragGesture): Boolean {
-     // CRITICAL: Check if we should use drag for rotation instead of translation
-     val customNode = transformableNode as? com.reactnativearviewer.CustomTransformableNode
-     val rotationEnabled = customNode?.rotationController?.isEnabled ?: false
-     
--    // Check if translation is actually enabled by checking the allowTransform prop
--    // We need to check the actual state, not just isEnabled (which might be true for rotation)
--    val translationActuallyEnabled = transformableNode.translationController.isEnabled && 
--                                     customNode?.translationController?.isEnabled == true
--    
-     // CRITICAL: If rotation is enabled and translation is not actually enabled, use drag for rotation
-     // This ensures single-finger swipe rotation works
-     // The transformation system will route drag gestures to this controller
-     if (rotationEnabled && !translationActuallyEnabled) {
-@@ -138,7 +146,6 @@ class CustomTranslationController(transformableNode: BaseTransformableNode?,
-     val customNode = transformableNode as? com.reactnativearviewer.CustomTransformableNode
-     val rotationEnabled = customNode?.rotationController?.isEnabled ?: false
-     
--    // Check if translation is actually enabled (check actual state, not just isEnabled flag)
--    // The isEnabled flag might be true even when translation is disabled (for rotation support)
--    val translationActuallyEnabled = transformableNode.translationController.isEnabled
--    
-     // CRITICAL: If rotation is enabled and translation is not actually enabled, use drag for rotation
-     // Single-finger swipe will rotate the model around Y-axis (vertical)
-     if (rotationEnabled && !translationActuallyEnabled) {
-@@ -150,7 +157,7 @@ class CustomTranslationController(transformableNode: BaseTransformableNode?,
-         // Calculate delta from last position
-         val deltaX = currentPosition.x - lastPosition.x
-         // Convert horizontal drag to rotation around Y-axis
-         // Negative deltaX rotates clockwise, positive rotates counter-clockwise
--        val rotationSpeed = 0.005f // Adjust this to control rotation sensitivity (radians per pixel)
-+                 val rotationSpeed = 0.025f // Increased from 0.005f for faster rotation (radians per pixel)
-         val currentRotation = transformableNode.localRotation
-         val rotationDelta = Quaternion.axisAngle(Vector3(0f, 1f, 0f), -deltaX * rotationSpeed)
-         transformableNode.localRotation = Quaternion.multiply(currentRotation, rotationDelta)
-
-diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomScaleController.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomScaleController.kt
-index 0000000..3333333 100644
---- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomScaleController.kt
-+++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomScaleController.kt
-@@ -0,0 +1,97 @@
-+package com.reactnativearviewer
-+
-+import android.util.Log
-+import com.google.ar.sceneform.ux.BaseTransformableNode
-+import com.google.ar.sceneform.ux.PinchGesture
-+import com.google.ar.sceneform.ux.ScaleController
-+import com.google.ar.sceneform.math.Vector3
-+
 +/**
-+ * Custom ScaleController that preserves the initial scale and allows scaling from that base
-+ * This prevents the scale from being reset to 1.0 when scaling gestures are used
-+ * Also enforces min/max scale limits in real-time during gestures to prevent model flipping
++ * AR house viewer using SceneView (Filament glTF loader) instead of Sceneform ModelRenderable.
 + */
-+class CustomScaleController(
-+  transformableNode: BaseTransformableNode?,
-+  gestureRecognizer: com.google.ar.sceneform.ux.PinchGestureRecognizer
-+) : ScaleController(transformableNode, gestureRecognizer) {
-+  
-+  // Store the initial scale that was set (e.g., 0.5 for 4 Module houses)
-+  private var initialScale: Float? = null
-+  
-+  // Store the minimum scale limit to prevent flipping
-+  private var minScaleLimit: Float? = null
+ class ArViewerView @JvmOverloads constructor(
+-  context: ThemedReactContext, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+-): FrameLayout(context, attrs, defStyleAttr), Scene.OnPeekTouchListener, Scene.OnUpdateListener {
+-  /**
+-   * We show only one model, let's store the ref here
+-   */
+-  private var modelNode: CustomTransformableNode? = null
+-  /**
+-   * Our main view that integrates with ARCore and renders a scene
+-   */
+-  private var arView: ArSceneView? = null
+-  /**
+-   * Event listener that triggers on focus
+-   */
+-  private val onFocusListener = OnWindowFocusChangeListener { onWindowFocusChanged(it) }
+-  /**
+-   * Event listener that triggers when the ARCore Session is to be configured
+-   */
+-  private val onSessionConfigurationListener: OnSessionConfigurationListener? = null
+-
+-  /**
+-   * Main view state
+-   */
+-  private var isStarted = false
+-  /**
+-   * ARCore installation requirement state
+-   */
++  context: ThemedReactContext,
++  attrs: AttributeSet? = null,
++  defStyleAttr: Int = 0
++) : FrameLayout(context, attrs, defStyleAttr) {
 +
-+  // Store the model's bottom offset (in model space) so we can keep feet on ground when scaling
-+  private var groundOffsetY: Float? = null
++  private var arView: ARSceneView? = null
++  private var modelNode: ModelNode? = null
++  private var anchorNode: AnchorNode? = null
++  private var modelInstance: ModelInstance? = null
++  private var modelLoadPath: String? = null
 +
-+  // Track if we've captured the initial scale
-+  private var hasCapturedInitialScale = false
+   private var installRequested = false
+-  /**
+-   * Failed session initialization state
+-   */
+   private var sessionInitializationFailed = false
+-  /**
+-   * Depth management enabled state
+-   */
+   private var isDepthManagementEnabled = false
+-  /**
+-   * Light estimation enabled state
+-   */
+   private var isLightEstimationEnabled = false
+-  /**
+-   * Instant placement enabled state
+-   */
+   private var isInstantPlacementEnabled = true
+-  /**
+-   * Plane orientation mode
+-   */
+   private var planeOrientationMode: String = "both"
+-  /**
+-   * Instructions enabled state
+-   */
+   private var isInstructionsEnabled = true
+-  /**
+-   * Device supported state
+-   */
+   private var isDeviceSupported = true
+-  /**
+-   * Reminder to keep track of model loading state
+-   */
+   private var isLoading = false
+ 
+-  /**
+-   * Config of the main session initialization
+-   */
+-  private var sessionConfig: Config? = null
+-  /**
+-   * AR session initialization
+-   */
+-  private var arSession: Session? = null
+-  /**
+-   * Instructions controller initialization
+-   */
+-  private var instructionsController: InstructionsController? = null
+-  /**
+-   * Transformation system initialization
+-   */
+-  private var transformationSystem: TransformationSystem? = null
+-  /**
+-   * Gesture detector initialization
+-   */
+-  private var gestureDetector: GestureDetector? = null
+-
+-  /**
+-   * Reminder to keep source of model loading
+-   */
+   private var modelSrc: String = ""
+-  /**
+-   * Set of allowed model transformations (rotate, scale, translate...)
+-   */
++  private var modelGroundOffsetY: Float = 0f
+   private var allowTransform = mutableSetOf<String>()
+ 
++  private var instructionsController: InstructionsController? = null
++  private var gestureDetector: GestureDetector? = null
++  private val loadExecutor = Executors.newSingleThreadExecutor()
++  private val mainHandler = Handler(Looper.getMainLooper())
 +
-+  /**
-+   * Set the Y offset from model center to bottom (positive = down). Used to keep model base on surface when scaling.
-+   */
-+  fun setGroundOffsetY(value: Float) {
-+    groundOffsetY = value
-+    Log.d("ARview scale", "CustomScaleController: groundOffsetY set to $value (feet will stay on surface when scaling)")
+   init {
+-    if (checkIsSupportedDevice(context.currentActivity!!)) {
+-      // check AR Core installation
+-      if (requestInstall()) {
+-        returnErrorEvent("ARCore installation required")
+-        isDeviceSupported = false
+-      } else {
+-        // let's create sceneform view
+-        arView = ArSceneView(context, attrs)
+-        arView!!.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+-        this.addView(arView)
+-
+-        transformationSystem = makeTransformationSystem()
+-
+-        gestureDetector = GestureDetector(
+-          context,
+-          object : SimpleOnGestureListener() {
+-            override fun onSingleTapUp(e: MotionEvent): Boolean {
+-              onSingleTap(e)
+-              return true
+-            }
+-
+-            override fun onDown(e: MotionEvent): Boolean {
+-              return true
+-            }
+-          })
+-
+-        arView!!.scene.addOnPeekTouchListener(this)
+-        arView!!.scene.addOnUpdateListener(this)
+-        arView!!.viewTreeObserver.addOnWindowFocusChangeListener(onFocusListener)
+-        arView!!.setOnSessionConfigChangeListener(this::onSessionConfigChanged)
+-
+-        val session = Session(context)
+-        val config = Config(session)
+-
+-        // Set plane orientation mode
+-        updatePlaneDetection(config)
+-        // Enable or not light estimation
+-        updateLightEstimation(config)
+-        // Enable or not depth management
+-        updateDepthManagement(config)
+-
+-        // Sets the desired focus mode
+-        config.focusMode = Config.FocusMode.AUTO
+-        // Force the non-blocking mode for the session.
+-        config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+-
+-        sessionConfig = config
+-        arSession = session
+-        arView!!.session?.configure(sessionConfig)
+-        arView!!.session = arSession
+-
+-        initializeSession()
+-        resume()
+-
+-        // Setup the instructions view.
+-        instructionsController = InstructionsController(context, this);
+-        instructionsController!!.setEnabled(isInstructionsEnabled);
+-      }
+-    } else {
+-      isDeviceSupported = false
+-    }
++    initializeArView(context as ThemedReactContext)
+   }
+ 
+-  private fun resume() {
+-    if (isStarted) {
++  private fun initializeArView(context: ThemedReactContext) {
++    val activity = context.currentActivity as? ComponentActivity
++    if (activity == null || !checkIsSupportedDevice(activity)) {
++      isDeviceSupported = false
++      returnErrorEvent("Device or activity not supported for AR")
+       return
+     }
+-    if ((context as ThemedReactContext).currentActivity != null) {
+-      isStarted = true
+-      try {
+-        arView!!.resume()
+-      } catch (ex: java.lang.Exception) {
+-        sessionInitializationFailed = true
+-        returnErrorEvent("Could not resume session")
+-      }
+-      if (!sessionInitializationFailed) {
+-        instructionsController?.setVisible(true)
+-      }
+-    }
+-  }
+ 
+-  /**
+-   * Initializes the ARCore session. The CAMERA permission is checked before checking the
+-   * installation state of ARCore. Once the permissions and installation are OK, the method
+-   * #getSessionConfiguration(Session session) is called to get the session configuration to use.
+-   * Sceneform requires that the ARCore session be updated using LATEST_CAMERA_IMAGE to avoid
+-   * blocking while drawing. This mode is set on the configuration object returned from the
+-   * subclass.
+-   */
+-  private fun initializeSession() {
+-    // Only try once
+-    if (sessionInitializationFailed) {
++    if (requestInstall(activity)) {
++      returnErrorEvent("ARCore installation required")
++      isDeviceSupported = false
+       return
+     }
+-    // if we have the camera permission, create the session
+-    if (CameraPermissionHelper.hasCameraPermission((context as ThemedReactContext).currentActivity)) {
+-      val sessionException: UnavailableException?
+-      try {
+-        onSessionConfigurationListener?.onSessionConfiguration(arSession, sessionConfig)
+-
+-        // run a JS event
+-        Log.d("ARview session", "started")
+-        val event = Arguments.createMap()
+-        val reactContext = context as ThemedReactContext
+-        reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+-          id,
+-          "onStarted",
+-          event
++
++    try {
++      arView = ARSceneView(
++        context = context,
++        sharedActivity = activity,
++        sharedLifecycle = activity.lifecycle,
++        sessionConfiguration = { _, config -> applySessionConfig(config) },
++        onSessionCreated = { sendStartedEvent() },
++        onSessionFailed = { returnErrorEvent(it.message ?: "AR session failed") },
++        onSessionUpdated = { _, frame -> onArFrame(frame) }
++      ).also { view ->
++        view.layoutParams = LayoutParams(
++          ViewGroup.LayoutParams.MATCH_PARENT,
++          ViewGroup.LayoutParams.MATCH_PARENT
+         )
++        view.planeRenderer.isEnabled = true
++        view.planeRenderer.isVisible = true
++        addView(view)
++      }
++
++      gestureDetector = GestureDetector(
++        context,
++        object : SimpleOnGestureListener() {
++          override fun onSingleTapUp(e: MotionEvent): Boolean {
++            onSingleTap(e)
++            return true
++          }
++
++          override fun onDown(e: MotionEvent): Boolean = true
++        }
++      )
+ 
+-        return
+-      } catch (e: UnavailableException) {
+-        sessionException = e
+-      } catch (e: java.lang.Exception) {
+-        sessionException = UnavailableException()
+-        sessionException.initCause(e)
++      arView!!.setOnTouchListener { _, event ->
++        gestureDetector?.onTouchEvent(event)
++        false
+       }
++
++      instructionsController = InstructionsController(context, this)
++      instructionsController!!.setEnabled(isInstructionsEnabled)
++    } catch (e: Exception) {
+       sessionInitializationFailed = true
+-      returnErrorEvent(sessionException?.message)
+-    } else {
+-      returnErrorEvent("Missing camera permissions")
++      returnErrorEvent("Could not create AR view: ${e.message}")
++      isDeviceSupported = false
+     }
+   }
+ 
+-  /**
+-   * Removed the focus listener
+-   */
+-  fun onDrop() {
+-    if(arView != null) {
+-      arView!!.pause()
+-      arView!!.session?.close()
+-      arView!!.destroy()
+-      arView!!.viewTreeObserver.removeOnWindowFocusChangeListener(onFocusListener)
+-    }
++  private fun applySessionConfig(config: Config) {
++    updatePlaneDetection(config)
++    updateLightEstimation(config)
++    updateDepthManagement(config)
++    config.focusMode = Config.FocusMode.AUTO
++    config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+   }
+ 
+-  /**
+-   * Occurs when a session configuration has changed.
+-   */
+-  private fun onSessionConfigChanged(config: Config) {
+-    instructionsController?.setEnabled(
+-      config.planeFindingMode !== Config.PlaneFindingMode.DISABLED
+-    )
+-  }
++  private fun onArFrame(frame: Frame) {
++    val view = arView ?: return
+ 
+-  /**
+-   * Creates the transformation system used by this view.
+-   */
+-  private fun makeTransformationSystem(): TransformationSystem {
+-    val selectionVisualizer = FootprintSelectionVisualizer()
+-    return TransformationSystem(resources.displayMetrics, selectionVisualizer)
+-  }
+-
+-  /**
+-   * Makes the transformation system responding to touches
+-   * CRITICAL: Enhanced to handle gestures even when model is too large/close
+-   * If model is selected but touch doesn't hit it directly, still process gestures
+-   */
+-  override fun onPeekTouch(hitTestResult: HitTestResult, motionEvent: MotionEvent?) {
+-    // CRITICAL: If model is selected but touch doesn't hit it directly (e.g., model is too large/close),
+-    // still pass the touch to transformation system so gestures can work
+-    // The transformation system can handle gestures on selected nodes even without direct hit
+-    if (modelNode != null && modelNode!!.isSelected && motionEvent != null) {
+-      // CRITICAL: Always route touches to transformation system when model is selected
+-      // This ensures drag gestures work for rotation even when translation is disabled
+-      // If hitTestResult doesn't have the model, create synthetic hit result
+-      val effectiveHitResult = if (hitTestResult.node == modelNode) {
+-        hitTestResult
+-      } else {
+-        // Create synthetic hit result for drag-based rotation
+-        val syntheticHitResult = HitTestResult()
+-        syntheticHitResult.node = modelNode
+-        syntheticHitResult
++    if (instructionsController != null) {
++      val hasTrackedPlane = frame.getUpdatedTrackables(Plane::class.java)
++        .any { it.trackingState == TrackingState.TRACKING }
++      val showPlaneInstructions = !hasTrackedPlane
++      if (instructionsController?.isVisible() != showPlaneInstructions) {
++        instructionsController?.setVisible(showPlaneInstructions)
+       }
+-      transformationSystem!!.onTouch(effectiveHitResult, motionEvent)
+-    } else {
+-      // Normal hit-testing for placement and direct model interaction
+-      transformationSystem!!.onTouch(hitTestResult, motionEvent)
+     }
+-    
+-    if (hitTestResult.node == null && motionEvent != null) {
+-      gestureDetector!!.onTouchEvent(motionEvent)
++
++    keepFeetOnSurface()
++
++    if (!isInstantPlacementEnabled || modelInstance == null || anchorNode != null) {
++      return
+     }
++    if (frame.camera.trackingState != TrackingState.TRACKING) {
++      return
++    }
++
++    val pos = floatArrayOf(0f, 0f, -1f)
++    val rotation = floatArrayOf(0f, 0f, 0f, 1f)
++    val anchor = view.session?.createAnchor(Pose(pos, rotation)) ?: return
++    attachModelToAnchor(anchor)
++    onModelPlaced()
+   }
+ 
+-  /**
+-   * On each frame
+-   */
+-  override fun onUpdate(frameTime: FrameTime?) {
+-    if (arView!!.session == null || arView!!.arFrame == null) return
+-    if (instructionsController != null) {
+-      // Instructions for the Plane finding mode.
+-      val showPlaneInstructions: Boolean = !arView!!.hasTrackedPlane()
+-      if (instructionsController?.isVisible() != showPlaneInstructions) {
+-        instructionsController?.setVisible(
+-          showPlaneInstructions
+-        )
+-      }
++  private fun onSingleTap(event: MotionEvent) {
++    val view = arView ?: return
++    if (modelInstance == null || view.frame == null) {
++      return
++    }
++    if (view.frame?.camera?.trackingState != TrackingState.TRACKING) {
++      return
+     }
+ 
+-    if (isInstantPlacementEnabled && arView!!.arFrame?.camera?.trackingState == TrackingState.TRACKING) {
+-      // Check if there is already an anchor
+-      if (modelNode?.parent is AnchorNode) {
+-        return
+-      }
++    val planeTypes = getPlaneTypesSet()
++    if (planeTypes.isEmpty()) {
++      return
++    }
+ 
+-      // Create the Anchor.
+-      val pos = floatArrayOf(0f, 0f, -1f)
+-      val rotation = floatArrayOf(0f, 0f, 0f, 1f)
+-      val anchor: Anchor = arView!!.session!!.createAnchor(Pose(pos, rotation))
+-      initAnchorNode(anchor)
++    val hit = view.hitTestAR(
++      xPx = event.x,
++      yPx = event.y,
++      planeTypes = planeTypes,
++      planePoseInPolygon = true
++    ) ?: return
+ 
+-      // tells JS that the model is visible
++    val alreadyPlaced = anchorNode != null
++    attachModelToAnchor(hit.createAnchor())
++    if (!alreadyPlaced) {
+       onModelPlaced()
+     }
+   }
+ 
+-  fun onSingleTap(motionEvent: MotionEvent?) {
+-    if (arView != null) {
+-      val frame: Frame? = arView!!.arFrame
+-      transformationSystem?.selectNode(null)
+-
+-      if (frame != null) {
+-        if (motionEvent != null && frame.camera.trackingState === TrackingState.TRACKING) {
+-          for (hitResult in frame.hitTest(motionEvent)) {
+-            val trackable = hitResult.trackable
+-            if (trackable is Plane && trackable.isPoseInPolygon(hitResult.hitPose) && modelNode != null) {
+-              // Remove old anchor (if any)
+-              var modelAlreadyAttached = false
+-              if (modelNode?.parent is AnchorNode) {
+-                (modelNode!!.parent as AnchorNode).anchor?.detach()
+-                modelAlreadyAttached = true
+-              }
+-
+-              // Create the Anchor
+-              val anchor: Anchor = arView!!.session!!.createAnchor(hitResult.hitPose)
+-              initAnchorNode(anchor)
+-
+-              // tells JS that the model is visible
+-              if (!modelAlreadyAttached) {
+-                onModelPlaced()
+-              }
+-              break
+-            }
+-          }
+-        }
+-      }
+-    }
+-  }
++  private fun attachModelToAnchor(anchor: com.google.ar.core.Anchor) {
++    val view = arView ?: return
++    val instance = modelInstance ?: return
+ 
+-  private fun initAnchorNode(anchor: Anchor) {
+-    val anchorNode = AnchorNode(anchor)
++    detachCurrentAnchor()
+ 
+-    anchorNode.parent = arView!!.scene
+-    modelNode!!.parent = anchorNode
++    val scale = getModuleScale(modelSrc)
++    val node = ModelNode(modelInstance = instance, autoAnimate = true)
++    applyModelTransform(node, scale)
+ 
+-    // Animate if has animation
+-    val renderableInstance = modelNode?.renderableInstance
+-    if (renderableInstance != null && renderableInstance.hasAnimations()) {
+-      renderableInstance.animate(true).start()
+-    }
+-    
+-    // CRITICAL: Re-select model after placement so gestures continue to work
+-    // The model was deselected in onSingleTap() to allow placement, but we need it selected for gestures
+-    if (modelNode != null && !modelNode!!.isSelected) {
+-      Log.d("ARview selection", "Re-selecting model after placement for gestures")
+-      modelNode!!.select()
+-      // Re-apply transforms to ensure controllers are enabled
+-      onTransformChanged()
++    val anchorNode = AnchorNode(view.engine, anchor)
++    anchorNode.addChildNode(node)
++    view.addChildNode(anchorNode)
++
++    this.anchorNode = anchorNode
++    this.modelNode = node
++    onTransformChanged()
++    Log.d("ARview model", "Model attached to anchor (SceneView loader)")
 +  }
 +
-+  /**
-+   * Set the initial scale that should be preserved
-+   * This should be called after the model's scale is set initially
-+   */
-+  fun setInitialScale(scale: Float) {
-+    initialScale = scale
-+    hasCapturedInitialScale = true
-+    
-+    // Calculate minimum scale limit: absolute minimum of 0.2 (20%) or 50% of initial, whichever is larger
-+    val absoluteMinScale = 0.2f
-+    val relativeMinScale = scale * 0.5f
-+    minScaleLimit = Math.max(absoluteMinScale, relativeMinScale)
-+    
-+    Log.d("ARview scale", "CustomScaleController: Initial scale set to $scale, minScaleLimit=${minScaleLimit}")
-+  }
-+  
-+  override fun onContinueTransformation(gesture: PinchGesture) {
-+    // If we haven't captured the initial scale yet, try to capture it now
-+    if (!hasCapturedInitialScale && transformableNode != null) {
-+      val currentScale = transformableNode.localScale
-+      if (currentScale.x > 0f && currentScale.x < 1f) {
-+        // This looks like a custom initial scale (not 1.0)
-+        initialScale = currentScale.x
-+        hasCapturedInitialScale = true
-+        
-+        // Calculate minimum scale limit
-+        val absoluteMinScale = 0.2f
-+        val relativeMinScale = currentScale.x * 0.5f
-+        minScaleLimit = Math.max(absoluteMinScale, relativeMinScale)
-+        
-+        Log.d("ARview scale", "CustomScaleController: Captured initial scale: ${initialScale}, minScaleLimit=${minScaleLimit}")
++  private fun detachCurrentAnchor() {
++    val view = arView ?: return
++    anchorNode?.let { node ->
++      view.removeChildNode(node)
++      node.destroy()
+     }
++    anchorNode = null
++    modelNode = null
+   }
+ 
+-  private fun onModelPlaced() {
+-    val event = Arguments.createMap()
+-    val reactContext = context as ThemedReactContext
+-    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+-      id,
+-      "onModelPlaced",
+-      event
++  private fun applyModelTransform(node: ModelNode, scale: Float) {
++    val center = node.center
++    val halfExtent = node.halfExtent
++    modelGroundOffsetY = center.y - halfExtent.y
++
++    val posX = -center.x
++    val posZ = -center.z
++    node.scale = Scale(scale, scale, scale)
++    node.position = Position(posX, -modelGroundOffsetY * scale, posZ)
++
++    applyScaleLimits(scale)
++    Log.d(
++      "ARview scale",
++      "Applied transform scale=$scale groundOffsetY=$modelGroundOffsetY pos=($posX, ${-modelGroundOffsetY * scale}, $posZ)"
+     )
+   }
+ 
+-  /**
+-   * Request ARCore installation
+-   */
+-  private fun requestInstall(): Boolean {
+-    when (ArCoreApk.getInstance().requestInstall((context as ThemedReactContext).currentActivity, !installRequested)) {
+-      InstallStatus.INSTALL_REQUESTED -> {
+-        installRequested = true
+-        return true
+-      }
+-      InstallStatus.INSTALLED -> {}
++  private fun keepFeetOnSurface() {
++    val node = modelNode ?: return
++    val s = node.scale.x
++    val pos = node.position
++    val targetY = -modelGroundOffsetY * s
++    if (kotlin.math.abs(pos.y - targetY) > 0.0001f) {
++      node.position = Position(pos.x, targetY, pos.z)
+     }
+-    return false
+   }
+ 
+-  /**
+-   * Set plane detection orientation
+-   */
+-  fun setPlaneDetection(planeOrientation: String) {
+-    planeOrientationMode = planeOrientation
+-    sessionConfig.let {
+-      updatePlaneDetection(sessionConfig)
+-      updateConfig()
++  private fun getModuleScale(modelSrc: String): Float {
++    val is6ModuleHouse = modelSrc.contains("6 Module", ignoreCase = true) ||
++      modelSrc.contains("6Module", ignoreCase = true) ||
++      modelSrc.contains("6-Module", ignoreCase = true) ||
++      (modelSrc.contains("Module") && modelSrc.contains("6"))
++    val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true) ||
++      modelSrc.contains("4Module", ignoreCase = true) ||
++      modelSrc.contains("4-Module", ignoreCase = true) ||
++      (modelSrc.contains("Module") && modelSrc.contains("4") && !is6ModuleHouse)
++    val is2ModuleHouse = modelSrc.contains("2 Module", ignoreCase = true) ||
++      modelSrc.contains("2Module", ignoreCase = true) ||
++      modelSrc.contains("2-Module", ignoreCase = true) ||
++      (modelSrc.contains("Module") && modelSrc.contains("2") && !is4ModuleHouse && !is6ModuleHouse)
++    val is1ModuleHouse = modelSrc.contains("1 Module", ignoreCase = true) ||
++      modelSrc.contains("1Module", ignoreCase = true) ||
++      modelSrc.contains("1-Module", ignoreCase = true) ||
++      (modelSrc.contains("Module") && modelSrc.contains("1") && !is2ModuleHouse && !is4ModuleHouse && !is6ModuleHouse)
++
++    return when {
++      is6ModuleHouse -> 0.18f
++      is4ModuleHouse -> 0.22f
++      is2ModuleHouse -> 0.28f
++      is1ModuleHouse -> 0.3f
++      else -> 0.3f
+     }
+   }
+ 
+-  private fun updatePlaneDetection(config: Config?) {
+-    when (planeOrientationMode) {
+-      "horizontal" -> {
+-        config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
+-        if (modelNode != null) {
+-          modelNode!!.translationController.allowedPlaneTypes.clear()
+-          modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.HORIZONTAL_DOWNWARD_FACING)
+-          modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.HORIZONTAL_UPWARD_FACING)
+-        }
+-      }
+-      "vertical" -> {
+-        config?.planeFindingMode = Config.PlaneFindingMode.VERTICAL
+-        if (modelNode != null) {
+-          modelNode!!.translationController.allowedPlaneTypes.clear()
+-          modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.VERTICAL)
+-        }
+-      }
+-      "both" -> {
+-        config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+-        if (modelNode != null) {
+-          modelNode!!.translationController.allowedPlaneTypes.clear()
+-          modelNode!!.translationController.allowedPlaneTypes = EnumSet.allOf(Plane.Type::class.java)
+-        }
+-      }
+-      "none" -> {
+-        config?.planeFindingMode = Config.PlaneFindingMode.DISABLED
+-        if (modelNode != null) {
+-          modelNode!!.translationController.allowedPlaneTypes.clear()
+-        }
+-      }
+-    }
++  private fun applyScaleLimits(initialScale: Float) {
++    val minScale = 0.06f
++    val maxScale = maxOf(initialScale * 8f, 1.2f)
++    Log.d("ARview scale", "Scale limits (gesture clamp TBD): min=$minScale max=$maxScale initial=$initialScale")
+   }
+ 
+-  /**
+-   * Set whether instant placement is enabled
+-   */
+-  fun setInstantPlacementEnabled(isEnabled: Boolean) {
+-    isInstantPlacementEnabled = isEnabled
++  private fun getPlaneTypesSet(): Set<Plane.Type> = when (planeOrientationMode) {
++    "horizontal" -> setOf(
++      Plane.Type.HORIZONTAL_UPWARD_FACING,
++      Plane.Type.HORIZONTAL_DOWNWARD_FACING
++    )
++    "vertical" -> setOf(Plane.Type.VERTICAL)
++    "both" -> setOf(
++      Plane.Type.HORIZONTAL_UPWARD_FACING,
++      Plane.Type.HORIZONTAL_DOWNWARD_FACING,
++      Plane.Type.VERTICAL
++    )
++    else -> emptySet()
+   }
+ 
+-  /**
+-   * Set whether light estimation is enabled
+-   */
+-  fun setLightEstimationEnabled(isEnabled: Boolean) {
+-    isLightEstimationEnabled = isEnabled
+-    sessionConfig.let {
+-      updateLightEstimation(sessionConfig)
+-      updateConfig()
+-    }
++  fun onDrop() {
++    loadExecutor.shutdownNow()
++    detachCurrentAnchor()
++    modelInstance = null
++    modelLoadPath = null
++    arView?.destroy()
++    arView = null
+   }
+ 
+-  private fun updateLightEstimation(config: Config?) {
+-    if(!isLightEstimationEnabled) {
+-      config?.lightEstimationMode = Config.LightEstimationMode.DISABLED
+-    } else {
+-      config?.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
++  fun loadModel(src: String) {
++    if (!isDeviceSupported) {
++      return
+     }
+-  }
+ 
+-  /**
+-   * Set whether depth management is enabled
+-   */
+-  fun setDepthManagementEnabled(isEnabled: Boolean) {
+-    isDepthManagementEnabled = isEnabled
+-    sessionConfig.let {
+-      updateDepthManagement(sessionConfig)
+-      updateConfig()
++    if (anchorNode != null) {
++      detachCurrentAnchor()
++      val event = Arguments.createMap()
++      (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
++        .receiveEvent(id, "onModelRemoved", event)
+     }
+-  }
+ 
+-  private fun updateDepthManagement(config: Config?) {
+-    if (!isDepthManagementEnabled) {
+-      sessionConfig?.depthMode = Config.DepthMode.DISABLED
+-      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED
+-    } else {
+-      if(arSession?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true) {
+-        sessionConfig?.depthMode = Config.DepthMode.AUTOMATIC
+-      }
+-      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_ENABLED
+-    }
+-  }
++    modelSrc = src
++    isLoading = true
++    Log.d("ARview model", "Loading with SceneView: $src")
+ 
+-  private fun updateConfig() {
+-    if (isStarted) {
+-      arSession?.configure(sessionConfig)
+-    }
+-  }
++    val loadPath = resolveModelPath(src)
++    modelLoadPath = loadPath
+ 
+-  /**
+-   * Start the loading of a GLB model URI
+-   */
+-  fun loadModel(src: String) {
+-    if (isDeviceSupported) {
+-      if (modelNode?.parent is AnchorNode) {
+-        Log.d("ARview model", "detaching")
+-        (modelNode!!.parent as AnchorNode).anchor?.detach() // free up memory of anchor
+-        arView?.scene?.removeChild(modelNode)
+-        modelNode = null
+-        val event = Arguments.createMap()
+-        val reactContext = context as ThemedReactContext
+-        reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+-          id,
+-          "onModelRemoved",
+-          event
+-        )
+-      }
+-      Log.d("ARview model", "loading")
+-      modelSrc = src
+-      isLoading = true
+-
+-      ModelRenderable.builder()
+-        .setSource(context, Uri.parse(src))
+-        .setIsFilamentGltf(true)
+-        .build()
+-        .thenAccept {
+-          modelNode = CustomTransformableNode(transformationSystem!!)
+-          modelNode!!.renderable = it
+-          
+-          // set model at bottom (not center) so it sits on detected surface
+-          modelNode!!.renderableInstance.filamentAsset.let { asset ->
+-            val center = asset!!.boundingBox.center.let { v -> Float3(v[0], v[1], v[2]) }
+-            val halfExtent = asset.boundingBox.halfExtent.let { v -> Float3(v[0], v[1], v[2]) }
+-            val fCenter = -(center + halfExtent * Float3(0f, -1f, 1f)) * Float3(1f, 1f, 1f)
+-            // Use bottom Y instead of center Y to prevent floating
+-            val bottomY = center.y - halfExtent.y
+-            modelNode!!.localPosition = Vector3(fCenter.x, -bottomY, fCenter.z)
+-          }
+-          
+-          // CRITICAL: Set initial scale to ensure model is visible and fits on screen
+-          // Models are often too large by default, especially larger houses
+-          // 4 Module houses are particularly large, so they need smaller scale
+-          // Check if this is a 4 Module house by checking the model path
+-          val is4ModuleHouse = modelSrc.contains("4 Module", ignoreCase = true)
+-          val initialScale = if (is4ModuleHouse) {
+-            0.15f // 15% of original size for 4 Module houses (they're very large)
+-          } else {
+-            0.3f  // 30% of original size for other houses
+-          }
+-          modelNode!!.localScale = Vector3(initialScale, initialScale, initialScale)
+-          Log.d("ARview scale", "Initial scale set to ${initialScale}x for ${if (is4ModuleHouse) "4 Module house" else "regular house"}")
+-          
+-          // CRITICAL: Select model AFTER setting renderable
+-          // The model's renderable automatically provides collision detection via bounding box
+-          // This ensures the transformation system can properly detect and handle gestures
+-          modelNode!!.select()
+-          
+-          // CRITICAL: Enable collision detection explicitly
+-          // This ensures gestures work even when model is large/close or partially off-screen
+-          // The renderable's bounding box is used automatically for hit-testing
+-          modelNode!!.setCollisionShape(null) // Reset to use renderable's automatic collision
+-
+-          Log.d("ARview model", "loaded and selected for gestures")
+-          isLoading = false
++    loadExecutor.execute {
++      try {
++        val view = arView ?: throw IllegalStateException("AR view not ready")
++        val instance = view.modelLoader.createModelInstance(loadPath)
++          ?: throw IllegalStateException("ModelLoader returned null for $loadPath")
+ 
+-          // set transforms on model - ensure controllers are enabled after model is fully initialized
+-          // This is critical: model must be selected and renderable before enabling gestures
++        mainHandler.post {
++          modelInstance = instance
++          isLoading = false
++          Log.d("ARview model", "SceneView model loaded from $loadPath")
+           onTransformChanged()
+-          
+-          // Log transform state for debugging
+-          Log.d("ARview transforms", "scale: ${allowTransform.contains("scale")}, rotate: ${allowTransform.contains("rotate")}, translate: ${allowTransform.contains("translate")}")
+-          Log.d("ARview controllers", "scaleEnabled: ${modelNode!!.scaleController.isEnabled}, rotateEnabled: ${modelNode!!.rotationController.isEnabled}, translateEnabled: ${modelNode!!.translationController.isEnabled}")
+-          Log.d("ARview selection", "Model selected: ${modelNode!!.isSelected}, collision: ${modelNode!!.collisionShape != null}")
+         }
+-        .exceptionally {
+-          Log.e("ARview model", "cannot load")
+-          returnErrorEvent("Cannot load the model: " + it.message)
+-          return@exceptionally null
++      } catch (e: Exception) {
++        Log.e("ARview model", "SceneView load failed", e)
++        mainHandler.post {
++          isLoading = false
++          returnErrorEvent("Cannot load the model: ${e.message}")
+         }
 +      }
 +    }
-+    
-+    // Call parent implementation to handle the pinch gesture
-+    super.onContinueTransformation(gesture)
-+    
-+    // CRITICAL: Immediately clamp the scale to prevent going below minimum during gesture
-+    // This prevents the model from flipping upside down while pinching
-+    if (minScaleLimit != null && transformableNode != null) {
-+      val currentScale = transformableNode.localScale
-+      val maxScaleLimit = (initialScale ?: 1f) * 10f  // Allow up to 10x initial scale
-+      
-+      // Clamp scale in real-time to prevent going below minimum
-+      if (currentScale.x < minScaleLimit!!) {
-+        transformableNode.localScale = Vector3(minScaleLimit!!, minScaleLimit!!, minScaleLimit!!)
-+        Log.d("ARview scale", "CustomScaleController: Scale clamped to minimum ${minScaleLimit} during gesture")
-+      } else if (currentScale.x > maxScaleLimit) {
-+        transformableNode.localScale = Vector3(maxScaleLimit, maxScaleLimit, maxScaleLimit)
-+        Log.d("ARview scale", "CustomScaleController: Scale clamped to maximum ${maxScaleLimit} during gesture")
++  }
++
++  private fun resolveModelPath(src: String): String {
++    if (src.startsWith("file://") || src.startsWith("http://") || src.startsWith("https://")) {
++      return src
++    }
++    return try {
++      context.assets.open(src).use { input ->
++        val name = src.substringAfterLast('/').ifEmpty { "model.glb" }
++        val cacheFile = File(context.cacheDir, "ar_model_$name")
++        FileOutputStream(cacheFile).use { output -> input.copyTo(output) }
++        Log.d("ARview model", "Copied asset to cache: ${cacheFile.absolutePath}")
++        cacheFile.absolutePath
 +      }
-+      // Keep model base on surface: position.y = -groundOffsetY * scale so feet stay on polka-dot plane
-+      if (groundOffsetY != null) {
-+        val pos = transformableNode.localPosition
-+        val s = transformableNode.localScale.x
-+        transformableNode.localPosition = Vector3(pos.x, -groundOffsetY!! * s, pos.z)
-+      }
++    } catch (e: Exception) {
++      Log.w("ARview model", "Cache copy failed, using asset path: ${e.message}")
++      src
+     }
+   }
+ 
+-  /**
+-   * Rotate the model with the requested angle
+-   */
+-  fun rotateModel(pitch: Number, yaw: Number, roll:Number) {
+-    Log.d("ARview rotateModel", "pitch: $pitch deg / yaw: $yaw deg / roll: $roll deg")
+-    modelNode?.localRotation = Quaternion.multiply(modelNode?.localRotation, Quaternion.eulerAngles(Vector3(pitch.toFloat(), yaw.toFloat(), roll.toFloat())))
++  fun rotateModel(pitch: Number, yaw: Number, roll: Number) {
++    val node = modelNode ?: return
++    val delta = Rotation(yaw.toFloat(), pitch.toFloat(), roll.toFloat())
++    node.rotation = node.rotation * delta
+   }
+ 
+-  /**
+-   * Remove the model from the view and reset plane detection
+-   */
+   fun resetModel() {
+-    Log.d("ARview model", "Resetting model")
+-    if (modelNode != null) {
++    if (modelSrc.isNotEmpty()) {
+       loadModel(modelSrc)
+     }
+   }
+ 
+-  /**
+-   * Add a transformation to the allowed list
+-   */
+   fun addAllowTransform(transform: String) {
+     allowTransform.add(transform)
+     onTransformChanged()
+   }
+ 
+-  /**
+-   * Remove a transformation to the allowed list
+-   */
+   fun removeAllowTransform(transform: String) {
+     allowTransform.remove(transform)
+     onTransformChanged()
+   }
+ 
+   private fun onTransformChanged() {
+-    if (modelNode == null) {
+-      // Model not loaded yet - transforms will be applied when model loads
+-      Log.d("ARview transforms", "Model not loaded yet, transforms will be applied on load. Current allowTransform: $allowTransform")
+-      return
+-    }
+-    
+-    // Model is loaded - apply transforms immediately
++    val node = modelNode ?: return
++    val anchor = anchorNode
+     val scaleEnabled = allowTransform.contains("scale")
+     val rotateEnabled = allowTransform.contains("rotate")
+     val translateEnabled = allowTransform.contains("translate")
+-    
+-    modelNode!!.scaleController.isEnabled = scaleEnabled
+-    modelNode!!.rotationController.isEnabled = rotateEnabled
+-    // CRITICAL: Keep translationController enabled even if translation is disabled
+-    // This allows it to intercept drag gestures for rotation when translation is disabled
+-    // The CustomTranslationController will handle rotation logic internally
+-    modelNode!!.translationController.isEnabled = translateEnabled || rotateEnabled
+-    
+-    // CRITICAL: Tell CustomTranslationController whether translation is actually enabled
+-    // This allows it to distinguish between "enabled for rotation" vs "enabled for translation"
+-    val customTranslationController = modelNode!!.translationController as? com.reactnativearviewer.CustomTranslationController
+-    customTranslationController?.setTranslationEnabled(translateEnabled)
+-    
+-    // CRITICAL: Ensure model is selected for scale gestures to work
+-    // ScaleController requires the model to be selected to receive pinch gestures
+-    if (scaleEnabled && !modelNode!!.isSelected) {
+-      Log.d("ARview scale", "Model not selected, selecting for scale gestures")
+-      modelNode!!.select()
++
++    node.isScaleEditable = scaleEnabled
++    node.isRotationEditable = rotateEnabled
++    node.isPositionEditable = false
++    anchor?.isPositionEditable = translateEnabled
++
++    if (scaleEnabled) {
++      applyScaleLimits(getModuleScale(modelSrc))
 +    }
 +  }
 +
-+  override fun onEndTransformation(gesture: PinchGesture) {
-+    super.onEndTransformation(gesture)
-+    
-+    // After scaling ends, ensure scale is within reasonable bounds
-+    if (minScaleLimit != null && transformableNode != null) {
-+      val currentScale = transformableNode.localScale
-+      val maxScaleLimit = (initialScale ?: 1f) * 10f
-+      
-+      // Final clamp to ensure scale is within bounds
-+      val clampedScale = Math.max(minScaleLimit!!, Math.min(maxScaleLimit, currentScale.x))
-+      if (Math.abs(currentScale.x - clampedScale) > 0.001f) {
-+        transformableNode.localScale = Vector3(clampedScale, clampedScale, clampedScale)
-+        Log.d("ARview scale", "CustomScaleController: Scale clamped to ${clampedScale} after gesture end")
-+      }
-+      // Keep model base on surface after gesture end
-+      if (groundOffsetY != null) {
-+        val pos = transformableNode.localPosition
-+        val s = transformableNode.localScale.x
-+        transformableNode.localPosition = Vector3(pos.x, -groundOffsetY!! * s, pos.z)
-+      }
++  fun setPlaneDetection(planeOrientation: String) {
++    planeOrientationMode = planeOrientation
++    arView?.configureSession { _, config -> applySessionConfig(config) }
++  }
++
++  private fun updatePlaneDetection(config: Config) {
++    when (planeOrientationMode) {
++      "horizontal" -> config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
++      "vertical" -> config.planeFindingMode = Config.PlaneFindingMode.VERTICAL
++      "both" -> config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
++      "none" -> config.planeFindingMode = Config.PlaneFindingMode.DISABLED
 +    }
 +  }
-+}
 +
-+diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTransformableNode.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTransformableNode.kt
-+index 0000000..4444444 100644
-+--- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTransformableNode.kt
-++++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/CustomTransformableNode.kt
-+@@ -10,7 +10,7 @@ class CustomTransformableNode(transformationSystem: TransformationSystem) :
-+   val translationController: TranslationController
++  fun setInstantPlacementEnabled(isEnabled: Boolean) {
++    isInstantPlacementEnabled = isEnabled
++  }
 +
-+   /** Returns the controller that scales this node using a pinch gesture.  */
-+-  val scaleController: ScaleController
-++  val scaleController: CustomScaleController
++  fun setLightEstimationEnabled(isEnabled: Boolean) {
++    isLightEstimationEnabled = isEnabled
++    arView?.configureSession { _, config -> applySessionConfig(config) }
++  }
 +
-+   /** Returns the controller that rotates this node using a twist gesture.  */
-+   val rotationController: RotationController
-+@@ -18,7 +18,7 @@ class CustomTransformableNode(transformationSystem: TransformationSystem) :
-+   init {
-+     translationController = CustomTranslationController(this, transformationSystem.dragRecognizer)
-+     addTransformationController(translationController)
-+-    scaleController = ScaleController(this, transformationSystem.pinchRecognizer)
-++    scaleController = CustomScaleController(this, transformationSystem.pinchRecognizer)
-+     addTransformationController(scaleController)
-+     rotationController = RotationController(this, transformationSystem.twistRecognizer)
-+     addTransformationController(rotationController)
-
++  private fun updateLightEstimation(config: Config) {
++    config.lightEstimationMode = if (isLightEstimationEnabled) {
++      Config.LightEstimationMode.ENVIRONMENTAL_HDR
++    } else {
++      Config.LightEstimationMode.DISABLED
++    }
++  }
++
++  fun setDepthManagementEnabled(isEnabled: Boolean) {
++    isDepthManagementEnabled = isEnabled
++    arView?.configureSession { _, config -> applySessionConfig(config) }
++  }
++
++  private fun updateDepthManagement(config: Config) {
++    val session = arView?.session
++    config.depthMode = if (
++      isDepthManagementEnabled &&
++      session?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true
++    ) {
++      Config.DepthMode.AUTOMATIC
++    } else {
++      Config.DepthMode.DISABLED
+     }
+-    
+-    Log.d("ARview transforms", "Applied transforms - scale: $scaleEnabled, rotate: $rotateEnabled, translate: $translateEnabled")
+-    Log.d("ARview controllers", "scaleEnabled: ${modelNode!!.scaleController.isEnabled}, rotateEnabled: ${modelNode!!.rotationController.isEnabled}, translateEnabled: ${modelNode!!.translationController.isEnabled}")
+-    Log.d("ARview selection", "Model selected: ${modelNode!!.isSelected}")
+   }
+ 
+-  /**
+-   * Enable/Disable instructions
+-   */
+   fun setInstructionsEnabled(isEnabled: Boolean) {
+     isInstructionsEnabled = isEnabled
+     instructionsController?.setEnabled(isInstructionsEnabled)
+   }
+ 
+-  /**
+-   * Takes a screenshot of the view and send it to JS through event
+-   */
+   fun takeScreenshot(requestId: Int) {
+-    Log.d("ARview takeScreenshot", requestId.toString())
+-
+-    val bitmap = Bitmap.createBitmap(
+-      width, height,
+-      Bitmap.Config.ARGB_8888
+-    )
+-    var encodedImage: String? = null
+-    var encodedImageError: String? = null
+-    PixelCopy.request(arView!!, bitmap, { copyResult ->
++    val view = arView ?: return
++    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
++    PixelCopy.request(view, bitmap, { copyResult ->
++      var encodedImage: String? = null
++      var encodedImageError: String? = null
+       if (copyResult == PixelCopy.SUCCESS) {
+         try {
+           val byteArrayOutputStream = ByteArrayOutputStream()
+           bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream)
+-          val byteArray = byteArrayOutputStream.toByteArray()
+-          val encoded = Base64.encodeToString(byteArray, Base64.DEFAULT)
+-          encodedImage = encoded
+-          Log.d("ARview takeScreenshot", "success")
++          encodedImage = Base64.encodeToString(byteArrayOutputStream.toByteArray(), Base64.DEFAULT)
+         } catch (e: Exception) {
+-          encodedImageError = "The image cannot be saved: " + e.localizedMessage
+-          Log.d("ARview takeScreenshot", "fail")
++          encodedImageError = "The image cannot be saved: ${e.localizedMessage}"
+         }
+-        returnDataEvent(requestId, encodedImage, encodedImageError)
++      } else {
++        encodedImageError = "PixelCopy failed with code $copyResult"
+       }
+-    }, Handler(Looper.getMainLooper()))
++      returnDataEvent(requestId, encodedImage, encodedImageError)
++    }, mainHandler)
++  }
++
++  private fun sendStartedEvent() {
++    if (sessionInitializationFailed) {
++      return
++    }
++    Log.d("ARview session", "started (SceneView)")
++    val event = Arguments.createMap()
++    (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
++      .receiveEvent(id, "onStarted", event)
++  }
++
++  private fun onModelPlaced() {
++    val event = Arguments.createMap()
++    (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
++      .receiveEvent(id, "onModelPlaced", event)
+   }
+ 
+-  /**
+-   * Send back an event to JS
+-   */
+   private fun returnDataEvent(requestId: Int, result: String?, error: String?) {
+     val event = Arguments.createMap()
+     event.putString("requestId", requestId.toString())
+     event.putString("result", result)
+     event.putString("error", error)
+-    val reactContext = context as ThemedReactContext
+-    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+-      id,
+-      "onDataReturned",
+-      event
+-    )
++    (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
++      .receiveEvent(id, "onDataReturned", event)
+   }
+ 
+-  /**
+-   * Send back an error event to JS
+-   */
+   private fun returnErrorEvent(message: String?) {
+     val event = Arguments.createMap()
+     event.putString("message", message)
+-    val reactContext = context as ThemedReactContext
+-    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+-      id,
+-      "onError",
+-      event
+-    )
++    (context as ThemedReactContext).getJSModule(RCTEventEmitter::class.java)
++      .receiveEvent(id, "onError", event)
++  }
++
++  private fun requestInstall(activity: Activity): Boolean {
++    when (ArCoreApk.getInstance().requestInstall(activity, !installRequested)) {
++      InstallStatus.INSTALL_REQUESTED -> {
++        installRequested = true
++        return true
++      }
++      InstallStatus.INSTALLED -> {}
++    }
++    return false
+   }
+ 
+-  /**
+-   * Returns false and displays an error message if Sceneform can not run, true if Sceneform can run
+-   * on this device.
+-   *
+-   *
+-   * Sceneform requires Android N on the device as well as OpenGL 3.0 capabilities.
+-   *
+-   *
+-   * Finishes the activity if Sceneform can not run
+-   */
+   private fun checkIsSupportedDevice(activity: Activity): Boolean {
+     val openGlVersionString =
+       (activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager)
+         .deviceConfigurationInfo
+         .glEsVersion
+     if (openGlVersionString.toDouble() < 3.0) {
+-      returnErrorEvent("This feature requires OpenGL ES 3.0 later")
++      returnErrorEvent("This feature requires OpenGL ES 3.0 or later")
+       return false
+     }
+     return true
+   }
+ }
+-
+-
+diff --git a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/HandMotionView.kt b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/HandMotionView.kt
+index 30edfe8..982e9bc 100644
+--- a/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/HandMotionView.kt
++++ b/node_modules/react-native-ar-viewer/android/src/main/java/com/reactnativearviewer/HandMotionView.kt
+@@ -2,23 +2,22 @@ package com.reactnativearviewer
+ 
+ import android.content.Context
+ import android.util.AttributeSet
++import android.view.animation.AlphaAnimation
+ import android.view.animation.Animation
+ import android.widget.FrameLayout
+ import androidx.appcompat.widget.AppCompatImageView
+-import com.google.ar.sceneform.ux.HandMotionAnimation
+ 
+ class HandMotionView : AppCompatImageView {
+-  private var animation: HandMotionAnimation? = null
+-  private var container: FrameLayout? = null
++  private var animation: Animation? = null
+ 
+   constructor(context: Context?, container: FrameLayout?) : super(context!!) {
+-    setupHandMotionAnimation(container)
++    setupHandMotionAnimation()
+   }
+ 
+   constructor(context: Context?, container: FrameLayout?, attrs: AttributeSet?) : super(
+     context!!, attrs
+   ) {
+-    setupHandMotionAnimation(container)
++    setupHandMotionAnimation()
+   }
+ 
+   override fun onAttachedToWindow() {
+@@ -40,16 +39,16 @@ class HandMotionView : AppCompatImageView {
+     }
+   }
+ 
+-  private fun setupHandMotionAnimation(container: FrameLayout?) {
+-    this.container = container
+-    this.setImageResource(R.drawable.sceneform_hand_phone)
+-    animation = HandMotionAnimation(container, this)
+-    animation!!.repeatCount = Animation.INFINITE
+-    animation!!.duration = ANIMATION_SPEED_MS
+-    animation!!.startOffset = 1000
++  private fun setupHandMotionAnimation() {
++    val pulse = AlphaAnimation(0.35f, 1.0f)
++    pulse.repeatCount = Animation.INFINITE
++    pulse.repeatMode = Animation.REVERSE
++    pulse.duration = ANIMATION_SPEED_MS
++    pulse.startOffset = 500
++    animation = pulse
+   }
+ 
+   companion object {
+-    private const val ANIMATION_SPEED_MS: Long = 2500
++    private const val ANIMATION_SPEED_MS: Long = 1200
+   }
+ }
