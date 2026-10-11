@@ -4,7 +4,7 @@
 
 ## 🚀 **Current Status: Pure React Native Version**
 
-**The Epic Homes AR app is now built with Pure React Native and is working prototype; was demoed live to Epic Homes' team**
+**The Epic Homes AR app is now built with Pure React Native and is a working prototype; was demoed live to Epic Homes' team**
 
 ### Why We Moved from Expo to Pure React Native
 
@@ -21,7 +21,7 @@ After extensive development and testing, we encountered several challenges with 
 - ✅ **Stable Builds** - Reliable APK generation and deployment
 - ✅ **Full AR Control** - Complete control over camera and AR features
 - ✅ **Simplified Dependencies** - Cleaner dependency management
-- ✅ **Production Ready** - Optimized for Epic Homes deployment
+- ✅ **Working Prototype** - Demoed to Epic Homes
 
 ## 🏠 About the App
 
@@ -209,4 +209,4 @@ This project is designed for Epic Homes' mission to preserve traditional archite
 
 **Built with ❤️ for Epic Homes' mission to preserve traditional Malaysian architecture through innovative AR technology.**
 
-**The Epic Homes AR app is ready for immediate testing, demonstration, and production deployment.**
+**The Epic Homes AR app is a working prototype, demoed to the Epic Homes team.**
