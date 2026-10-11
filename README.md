@@ -1,10 +1,10 @@
 # Epic Homes AR — Visual Housing Prototype (React Native)
 
 **One-line purpose**  
-Epic Homes AR helps indigenous families preview and compare house layouts in augmented reality before construction, reducing costly rework and helping families choose materials and layouts with confidence.
+Epic Homes AR intended to help indigenous families preview/compare house layouts in augmented reality before construction, reducing costly rework.
 
 **Progress snapshot**  
-Active development since June — UI complete; AR core fully functional. [View commit history](https://github.com/mehulgupta1001/EpicHomesAR-app/commits/pure-react-native)
+Developed June 2025 to February 2026; paused after a live demo to Epic Homes' team. UI complete; AR core working on supported Android devices. [View commit history](https://github.com/mehulgupta1001/EpicHomesAR-app/commits/pure-react-native)
 
 ---
 
@@ -384,8 +384,10 @@ This project is proprietary software developed for Epic Homes. All rights reserv
 **Mehul Gupta** — mehulgup1001@gmail.com  
 **Proof**: Public commit history (link above), UI screenshots in `/screenshots`, and Epic Homes email confirming prototype review available on request.
 
+**Built with AI-assisted development (Cursor), directed and tested by me**
+
 ---
 
-**Last Updated**: December 2025  
+**Last Updated**: February 2026
 **Version**: 0.9.7 (Development)  
 **Branch**: `pure-react-native`
