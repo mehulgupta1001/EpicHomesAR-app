@@ -3,6 +3,8 @@
 **One-line purpose**  
 Epic Homes AR intended to help indigenous families preview/compare house layouts in augmented reality before construction, reducing costly rework.
 
+**Built with AI-assisted development (Cursor), directed and tested by me**
+
 **Progress snapshot**  
 Developed June 2025 to February 2026; paused after a live demo to Epic Homes' team. UI complete; AR core working on supported Android devices. [View commit history](https://github.com/mehulgupta1001/EpicHomesAR-app/commits/pure-react-native)
 
@@ -35,7 +37,7 @@ Epic Homes AR is a bilingual (English/Malay) mobile application that allows user
 - ✅ **ARCore Integration** - Native Android AR support via react-native-ar-viewer
 - ✅ **Custom Scaling** - Model-specific initial scales for optimal viewing
 - ✅ **Centered Models** - All models properly centered for accurate AR placement
-- ✅ **Performance Optimized** - Works on Android devices from 2019 onwards
+- ✅ **Performance** - Tuned for ARCore-capable devices from around 2019 onwards
 
 ---
 
@@ -304,7 +306,7 @@ To modify AR behavior:
 
 ## 🧪 Testing
 
-### Manual Testing Checklist
+### Suggested Testing Checklist (for testers)
 
 - [ ] App launches without crashes
 - [ ] All house models load correctly
@@ -335,6 +337,7 @@ Test on at least 3 different Android devices:
 - **Model textures** - Some models may not display textures correctly
 - **Performance** - May be slower on older/low-end devices
 - **AR accuracy** - Surface detection may vary based on lighting and surface texture
+- **Device compatibility** - Install issues were seen on some Android devices; the app ran correctly on the developer's own devices
 
 ### Planned Improvements
 - [ ] iOS support via ARKit
@@ -384,10 +387,8 @@ This project is proprietary software developed for Epic Homes. All rights reserv
 **Mehul Gupta** — mehulgup1001@gmail.com  
 **Proof**: Public commit history (link above), UI screenshots in `/screenshots`, and Epic Homes email confirming prototype review available on request.
 
-**Built with AI-assisted development (Cursor), directed and tested by me**
-
 ---
 
-**Last Updated**: February 2026
+**Last functional update**: February 2026
 **Version**: 0.9.7 (Development)  
 **Branch**: `pure-react-native`
