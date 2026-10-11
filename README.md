@@ -4,7 +4,7 @@
 
 ## 🚀 **Current Status: Pure React Native Version**
 
-**The Epic Homes AR app is now built with Pure React Native and is production-ready!**
+**The Epic Homes AR app is now built with Pure React Native and is working prototype; was demoed live to Epic Homes' team**
 
 ### Why We Moved from Expo to Pure React Native
 
@@ -174,7 +174,7 @@ EpicHomesARPureRN/
 ### For Epic Homes Team
 - **Technical Issues**: Create issue in repository
 - **Feature Requests**: Contact development team
-- **Production Deployment**: Ready for immediate APK distribution
+- **Production Deployment**: This was never released to end users as it is a prototype.
 
 ### Contact
 - **Developer**: mehulgup1001@gmail.com
@@ -182,11 +182,11 @@ EpicHomesARPureRN/
 
 ## 📋 Deployment Status
 
-- **App Status**: ✅ Production Ready (Pure React Native)
-- **Testing Status**: ✅ Ready for device testing
-- **Build Status**: ✅ Ready for APK generation
-- **Error Status**: ✅ All critical issues resolved
-- **Deployment Risk**: ✅ None - Ready for immediate use
+- **App Status:** Working prototype, demoed live to Epic Homes' team
+- **Testing Status:** Tested on my own Android devices; install issues were seen on some other devices
+- **Build Status:** Debug and release APKs build successfully
+- **Known Issues:** Scaling can be unreliable on the larger house models; textures may not show correctly on some models; performance varies on older phones
+- **Deployment:** Not deployed to end users
 
 ## 🗺️ Roadmap
 
